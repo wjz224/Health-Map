@@ -1,16 +1,16 @@
 from google.cloud.sql.connector import Connector
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
-import os
+from os import environ
 from dotenv import load_dotenv
 load_dotenv()
 
 class Database:
     def __init__(self):
-        self.INSTANCE_CONNECTION_NAME = os.environ.get('INSTANCE_CONNECTION_NAME')
-        self.DB_USER = os.environ.get('DB_USER')
-        self.DB_PASS = os.environ.get('DB_PASS')
-        self.DB_NAME = os.environ.get('DB_NAME')
+        self.INSTANCE_CONNECTION_NAME = environ.get('INSTANCE_CONNECTION_NAME')
+        self.DB_USER = environ.get('DB_USER')
+        self.DB_PASS = environ.get('DB_PASS')
+        self.DB_NAME = environ.get('DB_NAME')
         pool = create_engine(
             "mysql+pymysql://",
             creator=self._getConn
