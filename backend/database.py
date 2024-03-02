@@ -170,21 +170,27 @@ class Database:
         self._fillDiseases(point_id, diseases)
         self.conn.commit()
 
+    def _getMedInfo(self, table: list[dict]) -> list[dict]:
+        # Get the medical information for a point
+        for row in table:
+            symptoms = self.conn.execute(sqlalchemy.text(
+                "SELECT NAME FROM SYMPTOMS_LIST WHERE ID IN (SELECT SYMPTOM_ID FROM SYMPTOMS WHERE POINT_ID = :point_id)"),
+                parameters={"point_id":row["ID"]}
+            )
+            row["SYMPTOMS"] = [row[0] for row in symptoms]
+            diseases = self.conn.execute(sqlalchemy.text(
+                "SELECT NAME FROM DISEASES_LIST WHERE ID IN (SELECT DISEASE_ID FROM DISEASES WHERE POINT_ID = :point_id)"),
+                parameters={"point_id":row["ID"]}
+            )
+            row["DISEASES"] = [row[0] for row in diseases]
+        return table
+
+
     def getAllPoints(self) -> list[dict]:
         # Get all points from the database
         result = self.conn.execute(sqlalchemy.text("SELECT * FROM POINTS"))
         result = [dict(row._mapping) for row in result]
-        for r in result:
-            symptoms = self.conn.execute(sqlalchemy.text(
-                "SELECT NAME FROM SYMPTOMS_LIST WHERE ID IN (SELECT SYMPTOM_ID FROM SYMPTOMS WHERE POINT_ID = :point_id)"),
-                parameters={"point_id":r["ID"]}
-            )
-            r["SYMPTOMS"] = [row[0] for row in symptoms]
-            diseases = self.conn.execute(sqlalchemy.text(
-                "SELECT NAME FROM DISEASES_LIST WHERE ID IN (SELECT DISEASE_ID FROM DISEASES WHERE POINT_ID = :point_id)"),
-                parameters={"point_id":r["ID"]}
-            )
-            r["DISEASES"] = [row[0] for row in diseases]
+        self._getMedInfo(result)
         return result
 
     def addUser(self, username: str):
@@ -213,17 +219,14 @@ class Database:
             parameters={"symptoms": ",".join(symptoms), "diseases": ",".join(diseases)}
         )
         result = [dict(row._mapping) for row in result]
-        for r in result:
-            symptoms = self.conn.execute(sqlalchemy.text(
-                "SELECT NAME FROM SYMPTOMS_LIST WHERE ID IN (SELECT SYMPTOM_ID FROM SYMPTOMS WHERE POINT_ID = :point_id)"),
-                parameters={"point_id":r["ID"]}
-            )
-            r["SYMPTOMS"] = [row[0] for row in symptoms]
-            diseases = self.conn.execute(sqlalchemy.text(
-                "SELECT NAME FROM DISEASES_LIST WHERE ID IN (SELECT DISEASE_ID FROM DISEASES WHERE POINT_ID = :point_id)"),
-                parameters={"point_id":r["ID"]}
-            )
-            r["DISEASES"] = [row[0] for row in diseases]
+        self._getMedInfo(result)
+        return result
+
+    def getClusterData(self, group_num: int) -> list[dict]:
+        # Get relevant info from all points from the database
+        result = self.conn.execute(sqlalchemy.text("SELECT ID, LATITUDE, LONGITUDE FROM POINTS"))
+        result = [dict(row._mapping) for row in result]
+        self._getMedInfo(result)
         return result
 
 if __name__ == "__main__":
