@@ -89,6 +89,37 @@ class Database:
         ))
         self.conn.commit()
 
+    def putSymptomList(self, symptoms: iter):
+        # Insert the list of symptoms into the database
+        self.conn.execute(sqlalchemy.text("DELETE FROM SYMPTOMS_LIST"))
+        for s in symptoms:
+            self.conn.execute(sqlalchemy.text(
+                "INSERT INTO SYMPTOMS_LIST (NAME) VALUES (:symptom)"),
+                parameters={"symptom":s}
+            )
+        self.conn.commit()
+
+    def putDiseaseList(self, diseases: iter):
+        # Insert the list of diseases into the database
+        self.conn.execute(sqlalchemy.text("DELETE FROM DISEASES_LIST"))
+        for d in diseases:
+            self.conn.execute(sqlalchemy.text(
+                "INSERT INTO DISEASES_LIST (NAME) VALUES (:disease)"),
+                parameters={"disease":d}
+            )
+        self.conn.commit()
+
+    def getSymptomList(self):
+        # Get the list of symptoms from the database
+        result = self.conn.execute(sqlalchemy.text("SELECT NAME FROM SYMPTOMS_LIST"))
+        return [row[0] for row in result]
+
+    def getDiseaseList(self):
+        # Get the list of diseases from the database
+        result = self.conn.execute(sqlalchemy.text("SELECT NAME FROM DISEASES_LIST"))
+        return [row[0] for row in result]
+
+
 # pool = sqlalchemy.create_engine(
 #     "mysql+pymysql://",
 #     creator=getconn
@@ -96,4 +127,5 @@ class Database:
 # with pool.connect() as db_conn:
 #     makeTables(db_conn)
 db = Database()
-db.makeTables()
+db.putDiseaseList(["COVID-19", "Flu", "Cold"])
+print(db.getDiseaseList())
