@@ -1,11 +1,56 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View, Button, Alert } from "react-native";
+import MyStack from "./MyStack.js";
+import HomeScreen from "./HomeScreen.js";
+import SymptomScreen from "./SymptomScreen.js";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+import { NavigationContainer } from "@react-navigation/native";
+// import MapView from "react-native-maps";
+// import { Callout } from "react-native-maps";
+// import { Marker } from "react-native-maps";
+// export default function App() {
+//   return (
+//     <View>
+//       <MyStack />
+//     </View>
+//   );
+// }
+const Stack = createNativeStackNavigator();
+// export default function App() {
+//   return (
+//     <NavigationContainer>
+//       {/* <Stack.Navigator>
+//         <Stack.Screen name="Home" component={HomeScreen} />
+//         <Stack.Screen name="Symptom" component={SymptomScreen} />
+//       </Stack.Navigator> */}
+//       {/* <MapView style={styles.map}>
+//         <Marker coordinate={{ latitude: -35, longitude: 147 }}>
+//           <Callout>
+//             <Text>hiho</Text>
+//           </Callout>
+//         </Marker>
+//       </MapView> */}
+//       <Text>Hiho</Text>
+//     </NavigationContainer>
+//   );
+// }
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+    <View>
+      {/* <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Symptom" component={SymptomScreen} />
+      </Stack.Navigator> */}
+      {/* <MapView style={styles.map}>
+        <Marker coordinate={{ latitude: -35, longitude: 147 }}>
+          <Callout>
+            <Text>hiho</Text>
+          </Callout>
+        </Marker>
+      </MapView> */}
+      <Text>Hiho</Text>
     </View>
   );
 }
@@ -13,8 +58,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "white",
+    alignItems: "center",
+    text: "white",
+    justifyContent: "center",
+  },
+  text: {
+    color: "black",
   },
 });
