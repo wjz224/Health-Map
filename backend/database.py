@@ -35,10 +35,12 @@ class Database:
 
     def makeTables(self):
         # Create the tables if they don't exist
+        # USERS
         self.conn.execute(text(
             """CREATE TABLE IF NOT EXISTS USERS (
                 USERNAME VARCHAR(255) NOT NULL PRIMARY KEY)"""
         ))
+        # POINTS
         self.conn.execute(text(
             """CREATE TABLE IF NOT EXISTS POINTS (
                     ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -48,16 +50,19 @@ class Database:
                     DATE DATETIME NOT NULL,
                     FOREIGN KEY (USERNAME) REFERENCES USERS(USERNAME))"""
         ))
+        # DISEASES_LIST
         self.conn.execute(text(
             """CREATE TABLE IF NOT EXISTS DISEASES_LIST (
                     ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                     NAME VARCHAR(255) NOT NULL)"""
         ))
+        # SYMPTOMS_LIST
         self.conn.execute(text(
             """CREATE TABLE IF NOT EXISTS SYMPTOMS_LIST (
                     ID INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                     NAME VARCHAR(255) NOT NULL)"""
         ))
+        # DISEASES
         self.conn.execute(text(
             """CREATE TABLE IF NOT EXISTS DISEASES (
                     POINT_ID INT NOT NULL,
@@ -69,6 +74,7 @@ class Database:
                         REFERENCES DISEASES_LIST(ID)
                         ON DELETE CASCADE)"""
         ))
+        # SYMPTOMS
         self.conn.execute(text(
             """CREATE TABLE IF NOT EXISTS SYMPTOMS (
                     POINT_ID INT NOT NULL,
@@ -80,6 +86,7 @@ class Database:
                         REFERENCES SYMPTOMS_LIST(ID)
                         ON DELETE CASCADE)"""
         ))
+        # POINT_GROUP
         self.conn.execute(text(
             """CREATE TABLE IF NOT EXISTS POINT_GROUP (
                     POINT_ID INT NOT NULL,
