@@ -12,14 +12,16 @@ class Database:
         self.DB_NAME = os.environ.get('DB_NAME')
         pool = sqlalchemy.create_engine(
             "mysql+pymysql://",
-            creator=self._getconn
+            creator=self._getConn
         )
         self.conn = pool.connect()
 
     def __del__(self):
+        # Close the connection when object is deleted
         self.conn.close()
 
-    def _getconn(self):
+    def _getConn(self):
+        # Use the connector to connect to the google cloud sql instance
         connector = Connector()
         conn = connector.connect(
             self.INSTANCE_CONNECTION_NAME,
@@ -31,6 +33,7 @@ class Database:
         return conn
 
     def makeTables(self):
+        # Create the tables if they don't exist
         self.conn.execute(sqlalchemy.text(
             """CREATE TABLE IF NOT EXISTS USERS (
                 USERNAME VARCHAR(255) NOT NULL PRIMARY KEY)"""
