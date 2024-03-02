@@ -119,7 +119,7 @@ class Database:
         result = self.conn.execute(sqlalchemy.text("SELECT NAME FROM DISEASES_LIST"))
         return [row[0] for row in result]
 
-    def fillSymptoms(self, point_id: int, symptoms: dir[str, bool]):
+    def _fillSymptoms(self, point_id: int, symptoms: dict[str, bool]):
         # Fill the symptoms for a given point
         self.conn.execute(sqlalchemy.text(
             "DELETE FROM SYMPTOMS WHERE POINT_ID = :point_id"),
@@ -138,7 +138,7 @@ class Database:
                 )
         self.conn.commit()
 
-    def fillDiseases(self, point_id: int, diseases: dir[str, bool]):
+    def _fillDiseases(self, point_id: int, diseases: dict[str, bool]):
         # Fill the diseases for a given point
         self.conn.execute(sqlalchemy.text(
             "DELETE FROM DISEASES WHERE POINT_ID = :point_id"),
@@ -155,6 +155,21 @@ class Database:
                     "INSERT INTO DISEASES (POINT_ID, DISEASE_ID) VALUES (:point_id, :disease_id)"),
                     parameters={"point_id":point_id, "disease_id":disease_id}
                 )
+        self.conn.commit()
+
+    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: dict[str, bool], diseases: dict[str, bool], date: str):
+        # Add a point to the database
+        self.conn.execute(sqlalchemy.text(
+            "INSERT INTO POINTS (LATITUDE, LONGITUDE, USERNAME, DATE) VALUES (:latitude, :longitude, :username, :date)"),
+            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date}
+        )
+        result = self.conn.execute(sqlalchemy.text(
+            "SELECT ID FROM POINTS WHERE LATITUDE = :latitude AND LONGITUDE = :longitude AND USERNAME = :username AND DATE = :date"),
+            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date}
+        )
+        point_id = result.fetchone()[0]
+        self._fillSymptoms(point_id, symptoms)
+        self._fillDiseases(point_id, diseases)
         self.conn.commit()
 
 
