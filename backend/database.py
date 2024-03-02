@@ -237,6 +237,17 @@ class Database:
         self._getMedInfo(result)
         return result
 
+    def makeCluster(self, map: dict[int, int]):
+        # Make a cluster of points given a map
+        self.conn.execute(text("DELETE FROM POINT_GROUP"))
+        for group in map:
+            for point in map[group]:
+                self.conn.execute(text(
+                    "INSERT INTO POINT_GROUP (POINT_ID, GROUP_NUM) VALUES (:point_id, :group_num)"),
+                    parameters={"point_id":point, "group_num":group}
+                )
+        self.conn.commit()
+
 if __name__ == "__main__":
     db = Database()
     db._wipePoints()
