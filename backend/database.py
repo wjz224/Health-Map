@@ -173,9 +173,7 @@ class Database:
     def getAllPoints(self) -> list[dict]:
         # Get all points from the database
         result = self.conn.execute(sqlalchemy.text("SELECT * FROM POINTS"))
-        for r in result:
-            print(r)
-        result = [dict(row) for row in result]
+        result = [dict(row._mapping) for row in result]
         print(result)
         for r in result:
             symptoms = self.conn.execute(sqlalchemy.text(
