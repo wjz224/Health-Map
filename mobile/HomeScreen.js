@@ -8,20 +8,21 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import Icon from "./circle.svg";
-import Svg, { Path } from "react-native-svg";
-import { ReactComponent as Logo } from "./circle.svg";
 import {
   Menu,
   MenuOptions,
   MenuOption,
   MenuTrigger,
 } from "react-native-popup-menu";
-import React, { useState, useEffect } from 'react';
-import MapView, { PROVIDER_GOOGLE, Callout, Marker } from 'react-native-maps';
-import * as Location from 'expo-location';
+import React, { useState, useEffect } from "react";
+import MapView, { PROVIDER_GOOGLE, Callout, Marker } from "react-native-maps";
+import * as Location from "expo-location";
 
 export default function HomeScreen({ navigation }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [points, setPoints] = useState([]);
@@ -29,8 +30,8 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
         return;
       }
 
@@ -58,8 +59,8 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       {location ? (
-        <MapView 
-          provider= {PROVIDER_GOOGLE}
+        <MapView
+          provider={PROVIDER_GOOGLE}
           style={styles.map}
           initialRegion={{
             latitude: location.coords.latitude,
@@ -71,26 +72,31 @@ export default function HomeScreen({ navigation }) {
           {points.map((point) => (
             <Marker
               key={point.id}
-              coordinate={{ latitude: point.Latitude, longitude: point.Longitude }}
+              coordinate={{
+                latitude: point.Latitude,
+                longitude: point.Longitude,
+              }}
             >
               <Callout>
                 <View>
                   <Text>Date Posted: {point.Date}</Text>
                   <Text style={styles.calloutTitle}>Symptoms:</Text>
                   {point.Symptoms.map((symptom, index) => (
-                    <Text key={index} style={styles.calloutText}>{symptom}</Text>
+                    <Text key={index} style={styles.calloutText}>
+                      {symptom}
+                    </Text>
                   ))}
 
                   <Text style={styles.calloutTitle}>Diseases:</Text>
                   {point.Diseases.map((disease, index) => (
-                    <Text key={index} style={styles.calloutText}>{disease}</Text>
+                    <Text key={index} style={styles.calloutText}>
+                      {disease}
+                    </Text>
                   ))}
                 </View>
               </Callout>
             </Marker>
           ))}
-
-
         </MapView>
       ) : errorMsg ? (
         <Text>{errorMsg}</Text>
@@ -99,13 +105,13 @@ export default function HomeScreen({ navigation }) {
       )}
       <StatusBar style="auto" />
       {/* <Text style={styles.mapOverlay}>Home Screen</Text> */}
-      <Pressable style={styles.mapOverlay2} onPress={() => YourComponent()}>
+      {/* <Pressable style={styles.mapOverlay2} onPress={() => YourComponent()}>
         <Image
           styler={styles.icon}
           source={require("./assets/filternew.png")}
           style={styles.icon}
         />
-      </Pressable>
+      </Pressable> */}
       <Pressable
         style={styles.mapOverlay}
         onPress={() => navigation.navigate("Symptom")}
@@ -116,11 +122,29 @@ export default function HomeScreen({ navigation }) {
           style={styles.icon}
         />
       </Pressable>
+
+      <Menu
+        style={styles.mapOverlay2}
+        opened={isMenuOpen}
+        onBackdropPress={toggleMenu}
+      >
+        <MenuTrigger>
+          <Pressable onPress={toggleMenu}>
+            <Image
+              // styler={styles.icon}
+              source={require("./assets/filternew.png")}
+              style={styles.icon}
+            />
+          </Pressable>
+        </MenuTrigger>
+        <MenuOptions>
+          <MenuOption onSelect={() => alert(`Save`)} text="Save" />
+          <MenuOption onSelect={() => alert(`Delete`)} text="Delete" />
+        </MenuOptions>
+      </Menu>
     </View>
   );
 }
-
-const YourComponent = () => alert("filter");
 
 const styles = StyleSheet.create({
   container: {
@@ -156,5 +180,19 @@ const styles = StyleSheet.create({
   icon: {
     height: 70,
     width: 70,
+  },
+  mainScreen: {
+    top: 100,
+    right: 100,
+    backgroundColor: "white",
+  },
+  mainScreen2: {
+    top: 120,
+    right: 120,
+  },
+  menuOptions: {
+    position: "relative",
+    top: 0,
+    right: 0,
   },
 });
