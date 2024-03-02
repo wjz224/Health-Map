@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Tuple 
+from typing import List, Tuple
 from pydantic import BaseModel
 from datetime import datetime
 from database import Database
@@ -17,8 +17,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-    
-# Class to represent Point and its arguments. 
+
+# Class to represent Point and its arguments.
 class Point(BaseModel):
     pointId = int
     symptoms: Tuple[str, ...]  # Change List to Tuple
@@ -26,7 +26,7 @@ class Point(BaseModel):
     longitude: float
     latitude: float
     date: datetime  # This should work without any additional installations
-    
+
 # GET Route to get all the points and their related data from the database
 @app.get("/points", description="Get all the points")
 async def get_all_points():
@@ -57,7 +57,7 @@ async def get_all_points():
 async def get_specific_point(point_id: int):
     return {"point": point_id}
 
-# POST Route to upload a point and their related data 
+# POST Route to upload a point and their related data
 @app.post("/points", description="Upload a point")
 async def upload_point(point: Point):
     return point
