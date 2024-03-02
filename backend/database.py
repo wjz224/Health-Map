@@ -109,55 +109,53 @@ class Database:
             )
         self.conn.commit()
 
-    def getSymptomList(self):
+    def getSymptomList(self) -> list:
         # Get the list of symptoms from the database
         result = self.conn.execute(sqlalchemy.text("SELECT NAME FROM SYMPTOMS_LIST"))
         return [row[0] for row in result]
 
-    def getDiseaseList(self):
+    def getDiseaseList(self) -> list:
         # Get the list of diseases from the database
         result = self.conn.execute(sqlalchemy.text("SELECT NAME FROM DISEASES_LIST"))
         return [row[0] for row in result]
 
-    def _fillSymptoms(self, point_id: int, symptoms: dict[str, bool]):
+    def _fillSymptoms(self, point_id: int, symptoms: iter):
         # Fill the symptoms for a given point
         self.conn.execute(sqlalchemy.text(
             "DELETE FROM SYMPTOMS WHERE POINT_ID = :point_id"),
             parameters={"point_id":point_id}
         )
         for s in symptoms:
-            if symptoms[s]:
-                result = self.conn.execute(sqlalchemy.text(
-                    "SELECT ID FROM SYMPTOMS_LIST WHERE NAME = :symptom"),
-                    parameters={"symptom":s}
-                )
-                symptom_id = result.fetchone()[0]
-                self.conn.execute(sqlalchemy.text(
-                    "INSERT INTO SYMPTOMS (POINT_ID, SYMPTOM_ID) VALUES (:point_id, :symptom_id)"),
-                    parameters={"point_id":point_id, "symptom_id":symptom_id}
-                )
+            result = self.conn.execute(sqlalchemy.text(
+                "SELECT ID FROM SYMPTOMS_LIST WHERE NAME = :symptom"),
+                parameters={"symptom":s}
+            )
+            symptom_id = result.fetchone()[0]
+            self.conn.execute(sqlalchemy.text(
+                "INSERT INTO SYMPTOMS (POINT_ID, SYMPTOM_ID) VALUES (:point_id, :symptom_id)"),
+                parameters={"point_id":point_id, "symptom_id":symptom_id}
+            )
         self.conn.commit()
 
-    def _fillDiseases(self, point_id: int, diseases: dict[str, bool]):
+    def _fillDiseases(self, point_id: int, diseases: iter):
         # Fill the diseases for a given point
         self.conn.execute(sqlalchemy.text(
             "DELETE FROM DISEASES WHERE POINT_ID = :point_id"),
             parameters={"point_id":point_id}
         )
         for d in diseases:
-            if diseases[d]:
-                result = self.conn.execute(sqlalchemy.text(
-                    "SELECT ID FROM DISEASES_LIST WHERE NAME = :disease"),
-                    parameters={"disease":d}
-                )
-                disease_id = result.fetchone()[0]
-                self.conn.execute(sqlalchemy.text(
-                    "INSERT INTO DISEASES (POINT_ID, DISEASE_ID) VALUES (:point_id, :disease_id)"),
-                    parameters={"point_id":point_id, "disease_id":disease_id}
-                )
+            result = self.conn.execute(sqlalchemy.text(
+                "SELECT ID FROM DISEASES_LIST WHERE NAME = :disease"),
+                parameters={"disease":d}
+            )
+            disease_id = result.fetchone()[0]
+            self.conn.execute(sqlalchemy.text(
+                "INSERT INTO DISEASES (POINT_ID, DISEASE_ID) VALUES (:point_id, :disease_id)"),
+                parameters={"point_id":point_id, "disease_id":disease_id}
+            )
         self.conn.commit()
 
-    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: dict[str, bool], diseases: dict[str, bool], date: str):
+    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: iter, diseases: iter, date: str):
         # Add a point to the database
         self.conn.execute(sqlalchemy.text(
             "INSERT INTO POINTS (LATITUDE, LONGITUDE, USERNAME, DATE) VALUES (:latitude, :longitude, :username, :date)"),
@@ -172,13 +170,49 @@ class Database:
         self._fillDiseases(point_id, diseases)
         self.conn.commit()
 
+    def getAllPoints(self) -> list[dict]:
+        # Get all points from the database
+        result = self.conn.execute(sqlalchemy.text("SELECT * FROM POINTS"))
+        for r in result:
+            print(r)
+        result = [dict(row) for row in result]
+        print(result)
+        for r in result:
+            symptoms = self.conn.execute(sqlalchemy.text(
+                "SELECT NAME FROM SYMPTOMS_LIST WHERE ID IN (SELECT SYMPTOM_ID FROM SYMPTOMS WHERE POINT_ID = :point_id)"),
+                parameters={"point_id":r["ID"]}
+            )
+            r["SYMPTOMS"] = [row[0] for row in symptoms]
+            diseases = self.conn.execute(sqlalchemy.text(
+                "SELECT NAME FROM DISEASES_LIST WHERE ID IN (SELECT DISEASE_ID FROM DISEASES WHERE POINT_ID = :point_id)"),
+                parameters={"point_id":r["ID"]}
+            )
+            r["DISEASES"] = [row[0] for row in diseases]
+        return result
 
-# pool = sqlalchemy.create_engine(
-#     "mysql+pymysql://",
-#     creator=getconn
-# )
-# with pool.connect() as db_conn:
-#     makeTables(db_conn)
-db = Database()
-db.putDiseaseList(["COVID-19", "Flu", "Cold"])
-print(db.getDiseaseList())
+    def addUser(self, username: str):
+        # Add a user to the database
+        try:
+            self.conn.execute(sqlalchemy.text(
+                "INSERT INTO USERS (USERNAME) VALUES (:username)"),
+                parameters={"username":username}
+            )
+            self.conn.commit()
+        except sqlalchemy.exc.IntegrityError:
+            pass
+
+    def _wipePoints(self):
+        # Wipe all points from the database
+        self.conn.execute(sqlalchemy.text("DELETE FROM POINTS"))
+        self.conn.commit()
+
+if __name__ == "__main__":
+    db = Database()
+    db._wipePoints()
+    db.putDiseaseList(["COVID-19", "Flu", "Cold"])
+    db.putSymptomList(["Cough", "Fever", "Sore Throat"])
+    print(db.getDiseaseList())
+    print(db.getSymptomList())
+    db.addUser("bob")
+    db.addPoint("bob", 1.0, 1.0, ["Fever", "Sore Throat"], ["COVID-19"], "2024-03-02")
+    print(db.getAllPoints())
