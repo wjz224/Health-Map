@@ -174,7 +174,6 @@ class Database:
         # Get all points from the database
         result = self.conn.execute(sqlalchemy.text("SELECT * FROM POINTS"))
         result = [dict(row._mapping) for row in result]
-        print(result)
         for r in result:
             symptoms = self.conn.execute(sqlalchemy.text(
                 "SELECT NAME FROM SYMPTOMS_LIST WHERE ID IN (SELECT SYMPTOM_ID FROM SYMPTOMS WHERE POINT_ID = :point_id)"),
@@ -204,6 +203,29 @@ class Database:
         self.conn.execute(sqlalchemy.text("DELETE FROM POINTS"))
         self.conn.commit()
 
+    def filterPoints(self, symptoms: iter, diseases: iter) -> list[dict]:
+        # return a filtered list of points
+        result = self.conn.execute(sqlalchemy.text(
+            """SELECT *
+                FROM POINTS
+                WHERE ID IN (SELECT POINT_ID FROM SYMPTOMS WHERE SYMPTOM_ID IN (SELECT ID FROM SYMPTOMS_LIST WHERE NAME IN (:symptoms)))
+                OR ID IN (SELECT POINT_ID FROM DISEASES WHERE DISEASE_ID IN (SELECT ID FROM DISEASES_LIST WHERE NAME IN (:diseases)))"""),
+            parameters={"symptoms": ",".join(symptoms), "diseases": ",".join(diseases)}
+        )
+        result = [dict(row._mapping) for row in result]
+        for r in result:
+            symptoms = self.conn.execute(sqlalchemy.text(
+                "SELECT NAME FROM SYMPTOMS_LIST WHERE ID IN (SELECT SYMPTOM_ID FROM SYMPTOMS WHERE POINT_ID = :point_id)"),
+                parameters={"point_id":r["ID"]}
+            )
+            r["SYMPTOMS"] = [row[0] for row in symptoms]
+            diseases = self.conn.execute(sqlalchemy.text(
+                "SELECT NAME FROM DISEASES_LIST WHERE ID IN (SELECT DISEASE_ID FROM DISEASES WHERE POINT_ID = :point_id)"),
+                parameters={"point_id":r["ID"]}
+            )
+            r["DISEASES"] = [row[0] for row in diseases]
+        return result
+
 if __name__ == "__main__":
     db = Database()
     db._wipePoints()
@@ -212,5 +234,8 @@ if __name__ == "__main__":
     print(db.getDiseaseList())
     print(db.getSymptomList())
     db.addUser("bob")
+    db.addUser("billy")
     db.addPoint("bob", 1.0, 1.0, ["Fever", "Sore Throat"], ["COVID-19"], "2024-03-02")
+    db.addPoint("billy", 2.0, 1.0, ["Cough"], ["Flu"], "2024-03-02")
     print(db.getAllPoints())
+    print(db.filterPoints(["Fever"], []))
