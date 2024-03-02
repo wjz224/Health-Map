@@ -6,13 +6,30 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": ["**/*"],
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
+    ]
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
+      "bundleIdentifier":"com.health.app",
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBpp_whL-8FTEE0vsGexhJ2zlpG9Ywvi4I"
+        }
       }
     },
     "web": {
