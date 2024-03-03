@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 import copy
 from os import environ
+from random import random
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
@@ -50,6 +51,7 @@ class Database:
                     LONGITUDE FLOAT NOT NULL,
                     USERNAME VARCHAR(255) NOT NULL,
                     DATE DATETIME NOT NULL,
+                    PIN VARCHAR(5) NOT NULL,
                     FOREIGN KEY (USERNAME) REFERENCES USERS(USERNAME))"""
         ))
         # DISEASES_LIST
@@ -170,14 +172,16 @@ class Database:
             )
         self.conn.commit()
 
-    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: iter, diseases: iter, date: str):
+    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: iter, diseases: iter, pin: str):
         # Add a point to the database
         res = self.conn.execute(text(
-            "INSERT INTO POINTS (LATITUDE, LONGITUDE, USERNAME, DATE) VALUES (:latitude, :longitude, :username, :date)"),
-            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date}
+            "INSERT INTO POINTS (LATITUDE, LONGITUDE, USERNAME, DATE, PIN) VALUES (:latitude, :longitude, :username, :date, :pin)"),
+            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":datetime.now(), "pin":pin}
         )
         self._fillSymptoms(res.lastrowid, symptoms)
         self._fillDiseases(res.lastrowid, diseases)
+        map = self._makeDiseaseGroups()
+        self.makeCluster(map)
         self.conn.commit()
 
     def _getMedInfo(self, table: list[dict]) -> list[dict]:
@@ -198,11 +202,12 @@ class Database:
 
     def getAllPoints(self) -> list[dict]:
         # Get all points from the database
-        result = self.conn.execute(text("SELECT * FROM POINTS"))
+        result = self.conn.execute(text("SELECT ID, LATITUDE, LONGITUDE, USERNAME, DATE FROM POINTS"))
         result = [dict(row._mapping) for row in result]
         for row in result:
             row["DATE"] = self._stringTime(row["DATE"])
-        self._getMedInfo(result)
+        result = self._getMedInfo(result)
+        result = self._getCluster(result)
         return result
 
     def addUser(self, username: str):
@@ -224,7 +229,7 @@ class Database:
     def filterPoints(self, symptoms: iter, diseases: iter) -> list[dict]:
         # return a filtered list of points
         result = self.conn.execute(text(
-            """SELECT *
+            """SELECT ID, LATITUDE, LONGITUDE, USERNAME, DATE
                 FROM POINTS
                 WHERE ID IN (SELECT POINT_ID FROM SYMPTOMS WHERE SYMPTOM_ID IN (SELECT ID FROM SYMPTOMS_LIST WHERE NAME IN (:symptoms)))
                 OR ID IN (SELECT POINT_ID FROM DISEASES WHERE DISEASE_ID IN (SELECT ID FROM DISEASES_LIST WHERE NAME IN (:diseases)))"""),
@@ -234,16 +239,17 @@ class Database:
         for row in result:
             row["DATE"] = self._stringTime(row["DATE"])
         self._getMedInfo(result)
+        self._getCluster(result)
         return result
 
-    def getClusterData(self) -> list[dict]:
+    def _getClusterData(self) -> list[dict]:
         # Get relevant info from all points from the database
         result = self.conn.execute(text("SELECT ID, LATITUDE, LONGITUDE FROM POINTS"))
         result = [dict(row._mapping) for row in result]
         self._getMedInfo(result)
         return result
 
-    def makeCluster(self, map: dict[int, int]):
+    def makeCluster(self, map: dict[int, list[int]]):
         # Make a cluster of points given a map
         self.conn.execute(text("DELETE FROM POINT_GROUP"))
         for group in map:
@@ -254,28 +260,87 @@ class Database:
                 )
         self.conn.commit()
 
+    def _getCluster(self, data: list[dict]) -> list[dict]:
+        for row in data:
+            result = self.conn.execute(text(
+                "SELECT GROUP_NUM FROM POINT_GROUP WHERE POINT_ID = :point_id"),
+                parameters={"point_id":row["ID"]}
+            )
+            someValue = result.fetchone()
+            if someValue is None or len(someValue) == 0:
+                row["GROUP"] = 0
+            else:
+                row["GROUP"] = someValue[0]
+        return data
+
+    def _makeDiseaseGroups(self) -> dict:
+        # make groups based on diseases
+        if len(self._getClusterData()) <= 1:
+            return {1: [self._getClusterData()[0]["ID"]]}
+        diseases = {}
+        for point in self._getClusterData():
+            s = ",".join(point['DISEASES'])
+            if s not in diseases:
+                diseases[s] = []
+            diseases[s].append(point["ID"])
+        # return diseases
+        ret = {}
+        for i, d in enumerate(diseases):
+            ret[i + 1] = diseases[d]
+        return ret
+
+
+    def checkPin(self, pin: str, point_id: int) -> bool:
+        # Check if a pin is correct for a given point
+        result = self.conn.execute(text(
+            "SELECT PIN FROM POINTS WHERE ID = :point_id"),
+            parameters={"point_id":point_id}
+        )
+        if result.fetchone()[0] == pin:
+            self.conn.execute(text("DELETE FROM POINTS WHERE ID = :point_id"),
+                              parameters={"point_id":point_id}
+            )
+            self.conn.commit()
+            return True
+        return False
+
+    def makePoints(self):
+        # Add some points for testing
+        db._wipePoints()
+        space = 0.001
+        db.makeTables()
+        self.addUser("bob")
+        self.addUser("billy")
+        self.putDiseaseList(["COVID-19", "Flu", "Cold"])
+        self.putSymptomList(["cough", "fever", "sore throat", "runny nose"])
+        points = [(40.6041, -75.38249)]
+        for _ in range(3):
+            temp_points = copy.deepcopy(points)
+            for point in temp_points:
+                ofset = (random() * space)
+                points.append((point[0] + ofset, point[1]))
+                ofset = (random() * space)
+                points.append((point[0], point[1] + ofset))
+                ofset = (random() * space)
+                points.append((point[0] + ofset, point[1] + ofset))
+                ofset = (random() * space)
+                points.append((point[0] + ofset, point[1]))
+                ofset = (random() * space)
+                points.append((point[0], point[1] + ofset))
+            points = list(set(points))
+        for i, point in enumerate(points):
+            d = None
+            if i % 4 == 0:
+                d = ["COVID-19"]
+            elif i % 4 == 1:
+                d = ["Flu"]
+            elif i % 4 == 2:
+                d = []
+            else:
+                d = ["Cold"]
+            self.addPoint("bob", point[0], point[1], ["cough", "fever"], d, "80085")
+        print(self.getAllPoints())
+
 if __name__ == "__main__":
     db = Database()
-    db._wipePoints()
-    db.addUser("bob")
-    db.addUser("billy")
-    points = [(40.6041, 75.38249)]
-    for _ in range(5):
-        temp_points = copy.deepcopy(points)
-        for point in temp_points:
-            points.append((point[0] + 0.0001, point[1]))
-            points.append((point[0], point[1] + 0.0001))
-            points.append((point[0] + 0.0001, point[1] + 0.0001))
-        points = list(set(points))
-        print(len(points))
-    for i, point in enumerate(points):
-        d = None
-        if i % 3 == 0:
-            d = ["COVID-19"]
-        elif i % 3 == 1:
-            d = ["Flu"]
-        else:
-            d = ["Cold"]
-        db.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now())
-
-    print(db.getAllPoints())
+    print(db.filterPoints(["cough", "fever"], ["COVID-19"]))
