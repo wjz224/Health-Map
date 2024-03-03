@@ -47,7 +47,7 @@ class Cluster:
         X = []
         for point in data:
             x = [point['LATITUDE'], point['LONGITUDE']]
-            for disease in all_diseases: ohz'
+            for disease in all_diseases:
                 x.append(1 if disease in point['DISEASES'] else 0)
             for symptom in all_symptoms:
                 x.append(1 if symptom in point['SYMPTOMS'] else 0)
