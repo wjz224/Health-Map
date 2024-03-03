@@ -19,12 +19,25 @@ app.add_middleware(
 )
 
 # Class to represent Point and its arguments.
-class Point(BaseModel):
+class PointPin(BaseModel):
+    pointId: int
     symptoms: Tuple[str, ...]  # Change List to Tuple
     diseases: Tuple[str, ...]  # Change List to Tuple
     longitude: float
     latitude: float
     date: str  # This should work without any additional installations
+    pin: str
+    
+    
+# Class to represent Point and its arguments.
+class Point(BaseModel):
+    pointId: int
+    symptoms: Tuple[str, ...]  # Change List to Tuple
+    diseases: Tuple[str, ...]  # Change List to Tuple
+    longitude: float
+    latitude: float
+    date: str  # This should work without any additional installations
+    group: int
 
 class Filter(BaseModel):
     symptoms: List[str]
@@ -39,15 +52,17 @@ async def get_all_points():
         # Convert each point in all_points to a Point instance
         formatted_points = [
             Point(
+                pointId = point["ID"],
                 symptoms=tuple(point["SYMPTOMS"]),  # Convert list to tuple
                 diseases=tuple(point["DISEASES"]),  # Convert list to tuple
                 longitude=point["LONGITUDE"],
                 latitude=point["LATITUDE"],
-                date= point["DATE"]
+                date= point["DATE"],
+                group = point["GROUP"]
             )
             for point in all_points
         ]
-
+        print("LENGTH", len(all_points))
         return {"points": formatted_points}
     except Exception as e:
         # Log the exception for debugging
@@ -73,7 +88,7 @@ async def get_dropdown():
 
 # POST Route to upload a point and their related data
 @app.post("/points", description="Upload a point")
-async def upload_point(point: Point):
+async def upload_point(point: PointPin):
     try:
         print("Received point data:")
         for param_name, param_value in point.dict().items():
@@ -86,9 +101,10 @@ async def upload_point(point: Point):
            longitude=point.longitude,
            symptoms=point.symptoms,
            diseases=point.diseases,
-           date=point.date
-       )
-
+           date=point.date,
+           pin=point.pin
+        )
+        # after adding point make the cluster
         return {"message": "Point parameters printed for debugging"}
     except Exception as e:
         # Log the exception for debugging
@@ -108,7 +124,8 @@ async def filter_points(symptoms: List[str] = Body(..., embed=True), diseases: L
                 diseases=tuple(point["DISEASES"]),
                 longitude=point["LONGITUDE"],
                 latitude=point["LATITUDE"],
-                date=datetime(2022, 1, 1)
+                date=point["DATE"],
+                group = point["GROUP"]
             )
             for point in points
         ]
@@ -118,3 +135,16 @@ async def filter_points(symptoms: List[str] = Body(..., embed=True), diseases: L
         print(f"Exception: {e}")
         # Raise HTTPException with a 500 status code
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+# @app.get("/test")
+# async def test():
+#     try:
+#         db.makePoints()
+#         return {"Successfully ran test code"}
+#     except Exception as e:
+#         raise HTTPException(status_code = 500, detail = "Internal Server Error")
+# Delete Route that deletes based on the pin passed
+# @app.delete("/points/delete/{pointId}/{pin}")
+# async def delete_point(pin:int , pointId:int):   
+    
+#     return
