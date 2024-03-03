@@ -176,9 +176,10 @@ class Database:
             parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date}
         )
         result = self.conn.execute(text(
-            "SELECT ID FROM POINTS WHERE LATITUDE = :latitude AND LONGITUDE = :longitude AND USERNAME = :username AND DATE = :date"),
-            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date}
+            "SELECT ID FROM POINTS WHERE LATITUDE = :latitude AND LONGITUDE = :longitude AND USERNAME = :username"),
+            parameters={"latitude":latitude, "longitude":longitude, "username":username}
         )
+        print("Result:", result.fetchone())
         point_id = result.fetchone()[0]
         self._fillSymptoms(point_id, symptoms)
         self._fillDiseases(point_id, diseases)

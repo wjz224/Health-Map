@@ -7,6 +7,7 @@ import {
   Alert,
   Image,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import {
   Menu,
@@ -137,9 +138,28 @@ export default function HomeScreen({ navigation }) {
             />
           </Pressable>
         </MenuTrigger>
-        <MenuOptions>
-          <MenuOption onSelect={() => alert(`Save`)} text="Save" />
-          <MenuOption onSelect={() => alert(`Delete`)} text="Delete" />
+        <MenuOptions customStyles={styles.menuOptions}>
+          <ScrollView style={{ maxHeight: 200 }}>
+            <MenuOption onSelect={() => alert(`Save`)} text="Save" />
+            <MenuOption onSelect={() => alert(`Delete`)} text="Delete" />
+            {/* <ScrollView style={{ height: 200 }}>
+              {data.map((item) => (
+                <MenuOption
+                  key={item.key}
+                  customStyles={{
+                    optionWrapper: {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    },
+                  }}
+                >
+                  <Text>{item.name}</Text>
+                  <Text>{item.icon}</Text>
+                </MenuOption>
+              ))}
+            </ScrollView> */}
+          </ScrollView>
         </MenuOptions>
       </Menu>
     </View>
@@ -192,7 +212,16 @@ const styles = StyleSheet.create({
   },
   menuOptions: {
     position: "relative",
-    top: 0,
-    right: 0,
+    top: -40,
+    backgroundColor: "white",
+    width: 150,
+  },
+  container2: {
+    flex: 1,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 30,
+    flexDirection: "column",
   },
 });

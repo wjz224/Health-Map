@@ -86,7 +86,7 @@ async def upload_point(point: Point):
            longitude=point.longitude,
            symptoms=point.symptoms,
            diseases=point.diseases,
-           date=point.date.isoformat()
+           date=point.date
        )
 
         return {"message": "Point parameters printed for debugging"}
@@ -95,9 +95,9 @@ async def upload_point(point: Point):
         print(f"Exception: {e}")
         # Raise HTTPException with a 500 status code
         raise HTTPException(status_code=500, detail="Internal Server Error")
-    return point
 
-@app.get("/points/filter", description="Filter points based on symptoms and diseases")
+
+@app.post("/points/filter", description="Filter points based on symptoms and diseases")
 async def filter_points(symptoms: List[str] = Body(..., embed=True), diseases: List[str] = Body(..., embed=True)):
     try:
         points = db.filterPoints(symptoms, diseases)
