@@ -202,7 +202,7 @@ class Database:
 
     def getAllPoints(self) -> list[dict]:
         # Get all points from the database
-        result = self.conn.execute(text("SELECT (ID, LATITUDE, LONGITUDE, USERNAME, DATE) FROM POINTS"))
+        result = self.conn.execute(text("SELECT ID, LATITUDE, LONGITUDE, USERNAME, DATE FROM POINTS"))
         result = [dict(row._mapping) for row in result]
         for row in result:
             row["DATE"] = self._stringTime(row["DATE"])
@@ -266,7 +266,11 @@ class Database:
                 "SELECT GROUP_NUM FROM POINT_GROUP WHERE POINT_ID = :point_id"),
                 parameters={"point_id":row["ID"]}
             )
-            row["GROUP"] = result.fetchone()[0]
+            someValue = result.fetchone()
+            if someValue is None or len(someValue) == 0:
+                row["GROUP"] = 0
+            else:
+                row["GROUP"] = someValue[0]
         return data
 
     def _makeDiseaseGroups(self) -> dict:
@@ -339,4 +343,4 @@ class Database:
 
 if __name__ == "__main__":
     db = Database()
-    db.makePoints()
+    print(db.getAllPoints())
