@@ -132,7 +132,7 @@ class Database:
         result = self.conn.execute(text("SELECT NAME FROM DISEASES_LIST"))
         return [row[0] for row in result]
 
-    def stringTime(self, date: datetime) -> str:
+    def _stringTime(self, date: datetime) -> str:
         # Convert a datetime object to a string
         return date.strftime("%m-%d-%Y")
 
@@ -180,6 +180,8 @@ class Database:
         )
         self._fillSymptoms(res.lastrowid, symptoms)
         self._fillDiseases(res.lastrowid, diseases)
+        map = self._makeDiseaseGroups()
+        self.makeCluster(map)
         self.conn.commit()
 
     def _getMedInfo(self, table: list[dict]) -> list[dict]:
@@ -243,7 +245,7 @@ class Database:
         self._getCluster(result)
         return result
 
-    def getClusterData(self) -> list[dict]:
+    def _getClusterData(self) -> list[dict]:
         # Get relevant info from all points from the database
         result = self.conn.execute(text("SELECT ID, LATITUDE, LONGITUDE FROM POINTS"))
         result = [dict(row._mapping) for row in result]
@@ -269,6 +271,22 @@ class Database:
             )
             row["GROUP"] = result.fetchone()[0]
         return data
+
+    def _makeDiseaseGroups(self) -> dict:
+        # make groups based on diseases
+        diseases = {}
+        for point in self._getClusterData():
+            s = ",".join(point['DISEASES'])
+            if s not in diseases:
+                diseases[s] = []
+            diseases[s].append(point["ID"])
+        # return diseases
+        ret = {}
+        for d, i in enumerate(diseases):
+            print(d, i)
+            ret[i + 1] = diseases[d]
+        return ret
+
 
     def checkPin(self, pin: str, point_id: int) -> bool:
         # Check if a pin is correct for a given point
