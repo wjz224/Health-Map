@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Button, Alert, Pressable } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  Alert,
+  Pressable,
+  TextInput,
+} from "react-native";
+import * as Location from "expo-location";
 import { Dropdown, MultiSelect } from "react-native-element-dropdown";
 
 const data = [
@@ -29,15 +38,18 @@ function getLabelsByValues(array, values) {
     .filter((label) => label !== null);
 }
 
-export default function SymptomScreen() {
+export default function SymptomScreen(props) {
   const [diseaseListData, setDiseaseListData] = useState();
   const [symptomListData, setSymptomListData] = useState();
   const [value, setValue] = useState(null);
   const [selected1, setSelected1] = useState([]);
   const [selected2, setSelected2] = useState([]);
+  const [pin, setPin] = useState();
+  const [location, setLocation] = useState();
   useEffect(() => {
     // Fetch data from route.com/dropdowns
     fetchDropdownData();
+    fetchLocation();
   }, []);
 
   const fetchDropdownData = async () => {
@@ -56,12 +68,21 @@ export default function SymptomScreen() {
     }
   };
 
+  const fetchLocation = async () => {
+    let location = await Location.getCurrentPositionAsync({});
+    setLocation(location);
+  };
+
   const onPressSubmit = async (disease, symptoms) => {
     const disease1 = getLabelsByValues(diseaseListData, disease);
     const symptom1 = getLabelsByValues(symptomListData, symptoms);
-    const mergedArray = [...disease1, ...symptom1];
+
     try {
-      console.log(mergedArray);
+      console.log(disease1);
+      console.log(symptom1);
+      console.log(location.coords.longitude);
+      console.log(pin);
+      console.log(location.coords.latitude);
       const response = await fetch(
         "https://healthimage-ey3sdnf4ka-uk.a.run.app/points",
         {
@@ -69,9 +90,21 @@ export default function SymptomScreen() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(mergedArray), // Convert the filter criteria into a JSON string
+          body: JSON.stringify({
+            symptoms: symptom1,
+            diseases: disease1,
+            longitude: location.coords.longitude,
+            latitude: location.coords.latitude,
+            pin: pin,
+          }), // Convert the filter criteria into a JSON string
         }
       );
+      if (response.ok) {
+        alert("You have submitted your response");
+        props.navigation.goBack();
+      } else {
+        alert("Submission failed. Please try again later.");
+      }
     } catch (e) {
       console.error(e);
       setErrorMsg("ERROR: Failed to submit data.");
@@ -124,6 +157,13 @@ export default function SymptomScreen() {
       ) : (
         <Text>Loading...</Text>
       )}
+      <TextInput
+        style={styles.input}
+        onChangeText={setPin}
+        value={pin}
+        placeholder="Create a Pin"
+        keyboardType="default"
+      />
       <Pressable onPress={() => onPressSubmit(selected1, selected2)}>
         <Text>Submit</Text>
       </Pressable>
@@ -157,5 +197,11 @@ const styles = StyleSheet.create({
   },
   selectedStyle: {
     borderRadius: 12,
+  },
+  input: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
   },
 });
