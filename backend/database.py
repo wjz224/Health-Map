@@ -173,11 +173,11 @@ class Database:
             )
         self.conn.commit()
 
-    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: iter, diseases: iter, date: str):
+    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: iter, diseases: iter, date: str, pin: str):
         # Add a point to the database
         res = self.conn.execute(text(
-            "INSERT INTO POINTS (LATITUDE, LONGITUDE, USERNAME, DATE) VALUES (:latitude, :longitude, :username, :date)"),
-            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date}
+            "INSERT INTO POINTS (LATITUDE, LONGITUDE, USERNAME, DATE, PIN) VALUES (:latitude, :longitude, :username, :date, :pin)"),
+            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date, "pin":pin}
         )
         self._fillSymptoms(res.lastrowid, symptoms)
         self._fillDiseases(res.lastrowid, diseases)
@@ -221,7 +221,8 @@ class Database:
 
     def _wipePoints(self):
         # Wipe all points from the database
-        self.conn.execute(text("DELETE FROM POINTS"))
+        self.conn.execute(text("DROP TABLE POINTS"))
+        # self.conn.execute(text("DELETE FROM POINTS"))
         self.conn.commit()
 
     def filterPoints(self, symptoms: iter, diseases: iter) -> list[dict]:
@@ -271,41 +272,77 @@ class Database:
             return True
         return False
 
+    def makePoints(self):
+        # Add some points for testing
+        db._wipePoints()
+        db.makeTables()
+        SPACE = 0.001
+        self.addUser("bob")
+        self.addUser("billy")
+        points = [(40.6041, -75.38249)]
+        for _ in range(3):
+            temp_points = copy.deepcopy(points)
+            for point in temp_points:
+                ofset = (random() * SPACE)
+                points.append((point[0] + ofset, point[1]))
+                ofset = (random() * SPACE)
+                points.append((point[0], point[1] + ofset))
+                ofset = (random() * SPACE)
+                points.append((point[0] + ofset, point[1] + ofset))
+                ofset = (random() * SPACE)
+                points.append((point[0] + ofset, point[1]))
+                ofset = (random() * SPACE)
+                points.append((point[0], point[1] + ofset))
+            points = list(set(points))
+        for i, point in enumerate(points):
+            d = None
+            if i % 4 == 0:
+                d = ["COVID-19"]
+            elif i % 4 == 1:
+                d = ["Flu"]
+            elif i % 4 == 2:
+                d = []
+            else:
+                d = ["Cold"]
+            self.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now(), "80085")
+        # print(self.getAllPoints())
+
 if __name__ == "__main__":
-    SPACE = 0.001
+
     db = Database()
-    # db._wipePoints()
-    # db.addUser("bob")
-    # db.addUser("billy")
-    # points = [(40.6041, -75.38249)]
-    # for _ in range(3):
-    #     temp_points = copy.deepcopy(points)
-    #     for point in temp_points:
-    #         # make a random value between 0 and 0.002
-    #         ofset = (random() * SPACE)
-    #         points.append((point[0] + ofset, point[1]))
-    #         ofset = (random() * SPACE)
-    #         points.append((point[0], point[1] + ofset))
-    #         ofset = (random() * SPACE)
-    #         points.append((point[0] + ofset, point[1] + ofset))
-    #         ofset = (random() * SPACE)
-    #         points.append((point[0] + ofset, point[1]))
-    #         ofset = (random() * SPACE)
-    #         points.append((point[0], point[1] + ofset))
-    #     points = list(set(points))
-    #     print(len(points))
-    # for i, point in enumerate(points):
-    #     d = None
-    #     if i % 4 == 0:
-    #         d = ["COVID-19"]
-    #     elif i % 4 == 1:
-    #         d = ["Flu"]
-    #     elif i % 4 == 2:
-    #         d = []
-    #     else:
-    #         d = ["Cold"]
-    #     db.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now())
-    # print(db.getAllPoints())
+    db._wipePoints()
+    db.makeTables()
+    db.addUser("bob")
+    db.addUser("billy")
+    points = [(40.6041, -75.38249)]
+    for _ in range(3):
+        temp_points = copy.deepcopy(points)
+        for point in temp_points:
+            # make a random value between 0 and 0.002
+            ofset = (random() * SPACE)
+            points.append((point[0] + ofset, point[1]))
+            ofset = (random() * SPACE)
+            points.append((point[0], point[1] + ofset))
+            ofset = (random() * SPACE)
+            points.append((point[0] + ofset, point[1] + ofset))
+            ofset = (random() * SPACE)
+            points.append((point[0] + ofset, point[1]))
+            ofset = (random() * SPACE)
+            points.append((point[0], point[1] + ofset))
+        points = list(set(points))
+        print(len(points))
+    for i, point in enumerate(points):
+        d = None
+        if i % 4 == 0:
+            d = ["COVID-19"]
+        elif i % 4 == 1:
+            d = ["Flu"]
+        elif i % 4 == 2:
+            d = []
+        else:
+            d = ["Cold"]
+        db.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now(), "80085")
+    print(db.getAllPoints())
 
     c = cluster.Cluster(db=db)
     x = c.makeDiseaseGroups()
