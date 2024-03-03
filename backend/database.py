@@ -223,10 +223,7 @@ class Database:
 
     def _wipePoints(self):
         # Wipe all points from the database
-        self.conn.execute(text("DROP TABLE SYMPTOMS"))
-        self.conn.execute(text("DROP TABLE DISEASES"))
-        self.conn.execute(text("DROP TABLE POINTS"))
-        # self.conn.execute(text("DELETE FROM POINTS"))
+        self.conn.execute(text("DELETE FROM POINTS"))
         self.conn.commit()
 
     def filterPoints(self, symptoms: iter, diseases: iter) -> list[dict]:
@@ -274,6 +271,8 @@ class Database:
 
     def _makeDiseaseGroups(self) -> dict:
         # make groups based on diseases
+        if len(self._getClusterData()) <= 1:
+            return {1: [self._getClusterData()[0]["ID"]]}
         diseases = {}
         for point in self._getClusterData():
             s = ",".join(point['DISEASES'])
@@ -282,8 +281,7 @@ class Database:
             diseases[s].append(point["ID"])
         # return diseases
         ret = {}
-        for d, i in enumerate(diseases):
-            print(d, i)
+        for i, d in enumerate(diseases):
             ret[i + 1] = diseases[d]
         return ret
 
@@ -304,8 +302,8 @@ class Database:
 
     def makePoints(self):
         # Add some points for testing
-        space = 0.001
         db._wipePoints()
+        space = 0.001
         db.makeTables()
         self.addUser("bob")
         self.addUser("billy")
@@ -336,7 +334,7 @@ class Database:
                 d = []
             else:
                 d = ["Cold"]
-            self.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now(), "80085")
+            self.addPoint("bob", point[0], point[1], ["cough", "fever"], d, "80085")
         print(self.getAllPoints())
 
 if __name__ == "__main__":
