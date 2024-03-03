@@ -42,6 +42,36 @@ export default function HomeScreen(props) {
     useState(null);
   const [pin, setPin] = useState("");
 
+  const dictionary = {
+    1: "COVID-19",
+    2: "Flu",
+    3: "Cold",
+    5: "cough",
+    6: "fever",
+    7: "sore throat",
+    8: "runny nose",
+  };
+
+  function splitArray(inputArray) {
+    const threshold = 4;
+    const arr1 = [];
+    const arr2 = [];
+
+    inputArray.forEach((value) => {
+      if (value < threshold) {
+        arr1.push(value);
+      } else {
+        arr2.push(value);
+      }
+    });
+
+    return [arr1, arr2];
+  }
+
+  function getStringValuesFromArray(array) {
+    return array.map((value) => dictionary[value]);
+  }
+
   const handleFilterPress = () => {
     props.navigation.navigate("Filter", { test });
   };
@@ -153,6 +183,7 @@ export default function HomeScreen(props) {
         symptoms,
         diseases,
       };
+      console.log(filterCriteria);
 
       const response = await fetch(
         "https://healthimage-ey3sdnf4ka-uk.a.run.app/points/filter",
@@ -200,7 +231,6 @@ export default function HomeScreen(props) {
     setSelectedPointIdForDeletion(null);
   };
 
-  const abc = ["a", "b", "c"];
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       {location ? (
@@ -274,59 +304,6 @@ export default function HomeScreen(props) {
         />
       </Pressable>
 
-      {/* New Filter Structure (Same as Add Symptom) */}
-      {/* <Pressable
-        style={styles.mapOverlay2}
-        // onPress={() => props.navigation.navigate("Filter", { apple: abc })}
-        onPress={handleFilterPress}
-      >
-        <Image
-          styler={styles.icon}
-          source={require("./assets/filternew.png")}
-          style={styles.icon}
-        />
-      </Pressable> */}
-
-      {/* Old Filter Structure */}
-      {/* <Menu
-        style={styles.mapOverlay2}
-        opened={isMenuOpen}
-        onBackdropPress={toggleMenu}
-      >
-        <MenuTrigger>
-          <Pressable onPress={toggleMenu}>
-            <Image
-              // styler={styles.icon}
-              source={require("./assets/filternew.png")}
-              style={styles.icon}
-            />
-          </Pressable>
-        </MenuTrigger>
-        <MenuOptions customStyles={styles.menuOptions}>
-          <ScrollView>
-            <Menu>
-              <MenuTrigger text="Select Options" />
-              <MenuOptions>
-                {["Option1", "Option2", "Option3"].map((option, index) => (
-                  <MenuOption key={index} onSelect={() => toggleOption(option)}>
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      <TouchableOpacity onPress={() => toggleOption(option)}>
-                        <Text style={{ marginRight: 8 }}>
-                          {selectedOptions.includes(option) ? "✓" : "○"}
-                        </Text>
-                      </TouchableOpacity>
-                      <Text>{option}</Text>
-                    </View>
-                  </MenuOption>
-                ))}
-              </MenuOptions>
-            </Menu>
-          </ScrollView>
-        </MenuOptions>
-      </Menu> */}
-
       {/* Third idea */}
       <View style={styles.mapOverlay}>
         {nestedList ? (
@@ -344,8 +321,14 @@ export default function HomeScreen(props) {
             onSelectedItemsChange={(item) => setSelected(item)}
             selectedItems={selected}
             onConfirm={() => {
-              const filteredData = getNameFromId(selected);
               console.log(selected);
+              const [diseaseRes, symptomRes] = splitArray(selected);
+              const result1 = getStringValuesFromArray(diseaseRes);
+              const result2 = getStringValuesFromArray(symptomRes);
+              // const filteredData = getNameFromId(selected);
+              console.log(result1);
+              console.log(result2);
+              fetchFilteredData(result2, result1);
             }}
           />
         ) : (
