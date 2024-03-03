@@ -8,15 +8,6 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import Icon from "./circle.svg";
-import Svg, { Path } from "react-native-svg";
-import { ReactComponent as Logo } from "./circle.svg";
-import {
-  Menu,
-  MenuOptions,
-  MenuOption,
-  MenuTrigger,
-} from "react-native-popup-menu";
 import React, { useState, useEffect } from 'react';
 import MapView, { PROVIDER_GOOGLE, Callout, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -37,23 +28,54 @@ export default function HomeScreen({ navigation }) {
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
     })();
-    //fetchData();
+    fetchData();
   }, []);
 
-  // const fetchData = async () => {
-  //   try {
-  //     const response = await fetch('YOUR_BACKEND_URL');
-  //     const json = await response.json();
-  //     const pointsArray = Object.keys(json.points).map(key => ({
-  //       ...json.points[key],
-  //       id: key, // Add an id for key usage in Marker
-  //     }));
-  //     setPoints(pointsArray);
-  //   } catch (error) {
-  //     console.error(error);
-  //     setErrorMsg('Failed to fetch points data');
-  //   }
-  // };
+  const fetchData = async () => {
+    try {
+      const response = await fetch('https://healthimage-ey3sdnf4ka-uk.a.run.app/points');
+      const json = await response.json();
+      const pointsArray = json.points.map((point, index) => ({
+        ...point,
+        id: index, 
+      }));
+      setPoints(pointsArray);
+    } catch (error) {
+      console.error(error);
+      setErrorMsg('Failed to fetch points data');
+    }
+  };
+
+  const fetchFilteredData = async (symptoms, diseases) => {
+    try {
+      const filterCriteria = {
+        symptoms, 
+        diseases, 
+      };
+  
+      const response = await fetch('https://healthimage-ey3sdnf4ka-uk.a.run.app/points/filter', {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(filterCriteria), // Convert the filter criteria into a JSON string
+      });
+      console.log(JSON.stringify(filterCriteria));
+  
+      const json = await response.json();
+      console.log(json);
+      const pointsArray = json.points.map((point, index) => ({
+        ...point,
+        id: index, // Assign an ID for key usage in Marker (if needed)
+      }));
+  
+      setPoints(pointsArray);
+    } catch (error) {
+      console.error(error);
+      setErrorMsg('Failed to fetch filtered points data');
+    }
+  };
+  
 
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -71,24 +93,18 @@ export default function HomeScreen({ navigation }) {
           {points.map((point) => (
             <Marker
               key={point.id}
-              coordinate={{ latitude: point.Latitude, longitude: point.Longitude }}
+              coordinate={{ latitude: point.latitude, longitude: point.longitude }}
             >
               <Callout>
                 <View>
-                  <Text>Date Posted: {point.Date}</Text>
-                  <Text style={styles.calloutTitle}>Symptoms:</Text>
-                  {point.Symptoms.map((symptom, index) => (
-                    <Text key={index} style={styles.calloutText}>{symptom}</Text>
-                  ))}
-
-                  <Text style={styles.calloutTitle}>Diseases:</Text>
-                  {point.Diseases.map((disease, index) => (
-                    <Text key={index} style={styles.calloutText}>{disease}</Text>
-                  ))}
+                  <Text>Date Posted: {point.date}</Text>
+                  <Text style={styles.calloutText}>Symptoms: {point.symptoms.join(', ')}</Text>
+                  <Text style={styles.calloutText}>Diseases: {point.diseases.join(', ')}</Text>
                 </View>
               </Callout>
             </Marker>
           ))}
+
 
 
         </MapView>
