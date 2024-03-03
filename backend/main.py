@@ -24,7 +24,7 @@ class Point(BaseModel):
     diseases: Tuple[str, ...]  # Change List to Tuple
     longitude: float
     latitude: float
-    date: datetime  # This should work without any additional installations
+    date: str  # This should work without any additional installations
 
 class Filter(BaseModel):
     symptoms: List[str]
@@ -43,7 +43,7 @@ async def get_all_points():
                 diseases=tuple(point["DISEASES"]),  # Convert list to tuple
                 longitude=point["LONGITUDE"],
                 latitude=point["LATITUDE"],
-                date=datetime(2022, 1, 1)
+                date= point["DATE"]
             )
             for point in all_points
         ]
