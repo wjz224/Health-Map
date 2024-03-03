@@ -7,7 +7,6 @@ from random import random
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
-# import cluster
 
 class Database:
     def __init__(self):
@@ -173,11 +172,11 @@ class Database:
             )
         self.conn.commit()
 
-    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: iter, diseases: iter, date: str, pin: str):
+    def addPoint(self, username: str, latitude: float, longitude: float, symptoms: iter, diseases: iter, pin: str):
         # Add a point to the database
         res = self.conn.execute(text(
             "INSERT INTO POINTS (LATITUDE, LONGITUDE, USERNAME, DATE, PIN) VALUES (:latitude, :longitude, :username, :date, :pin)"),
-            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date, "pin":pin}
+            parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":datetime.now(), "pin":pin}
         )
         self._fillSymptoms(res.lastrowid, symptoms)
         self._fillDiseases(res.lastrowid, diseases)
@@ -305,8 +304,7 @@ class Database:
             else:
                 d = ["Cold"]
             self.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now(), "80085")
-        # print(self.getAllPoints())
+        print(self.getAllPoints())
 
 if __name__ == "__main__":
     db = Database()
-    
