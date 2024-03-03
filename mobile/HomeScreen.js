@@ -331,7 +331,7 @@ export default function HomeScreen(props) {
       <View style={styles.mapOverlay}>
         {nestedList ? (
           <SectionedMultiSelect
-            styles={styles.box}
+            // styles={styles.mapOverlay}
             items={nestedList}
             IconRenderer={Icon}
             uniqueKey="id"
@@ -360,7 +360,7 @@ export default function HomeScreen(props) {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text>pin</Text>
+            <Text>Pin</Text>
             <TextInput
               style={styles.input}
               onChangeText={setPin}
@@ -397,10 +397,123 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  icon: {
+    height: 70,
+    width: 70,
+  },
+  mainScreen: {
+    top: 100,
+    right: 100,
+    backgroundColor: "white",
+  },
+  mainScreen2: {
+    top: 120,
+    right: 120,
+  },
+  menuOptions: {
+    position: "relative",
+    top: -40,
+    backgroundColor: "white",
+    width: 150,
+  },
+  container2: {
+    flex: 1,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 30,
+    flexDirection: "column",
+  },
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    marginTop: 10, // Adjust based on your layout
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  input: {
+    height: 40,
+    width: "100%", // Adjust if necessary
+    marginBottom: 20,
+    borderWidth: 1,
+    padding: 10,
+    color: "black",
+    borderColor: "black", // Adjust color as needed
+    borderRadius: 5,
+  },
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    marginTop: 10,
+  },
+  textStyle: {
+    color: "black",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  customView: {
+    padding: 10,
+    backgroundColor: "white",
+    borderRadius: 6,
+    borderColor: "grey",
+    borderWidth: 0.5,
+  },
+  pressableStyle: {
+    marginTop: 10,
+    backgroundColor: "#ff4444",
+    padding: 10,
+    borderRadius: 5,
+  },
+  pressableText: {
+    color: "white",
+    textAlign: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "black",
+    alignItems: "center",
+    text: "white",
+    justifyContent: "center",
+  },
+  text: {
+    color: "white",
+  },
+  map: {
+    width: "100%",
+    height: "100%",
+  },
   mapOverlay: {
     position: "absolute",
-    bottom: 20,
-    right: "6%",
+    bottom: 35,
+    right: "8%",
     padding: 16,
     width: "50",
     textAlign: "center",
@@ -408,18 +521,16 @@ const styles = StyleSheet.create({
   },
   mapOverlay2: {
     position: "absolute",
-    bottom: 120,
-    right: "3%",
+    bottom: 130,
+    right: "5%",
     padding: 16,
     width: "50",
     textAlign: "center",
-    maxHeight: 100,
-    maxWidth: 100,
   },
   mapOverlay3: {
     position: "absolute",
-    bottom: 200,
-    right: "3%",
+    bottom: 210,
+    right: "5%",
     padding: 16,
     width: "50",
     textAlign: "center",
