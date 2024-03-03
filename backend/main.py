@@ -20,7 +20,6 @@ app.add_middleware(
     
 # Class to represent Point and its arguments. 
 class Point(BaseModel):
-    pointId = int
     symptoms: Tuple[str, ...]  # Change List to Tuple
     diseases: Tuple[str, ...]  # Change List to Tuple
     longitude: float
@@ -36,7 +35,6 @@ async def get_all_points():
         # Convert each point in all_points to a Point instance
         formatted_points = [
             Point(
-                pointId = point["ID"],
                 symptoms=tuple(point["SYMPTOMS"]),  # Convert list to tuple
                 diseases=tuple(point["DISEASES"]),  # Convert list to tuple
                 longitude=point["LONGITUDE"],
@@ -45,6 +43,7 @@ async def get_all_points():
             )
             for point in all_points
         ]
+            
         return {"points": formatted_points}
     except Exception as e:
         # Log the exception for debugging
@@ -52,12 +51,43 @@ async def get_all_points():
         # Raise HTTPException with a 500 status code
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-# GET Route to get the specified point's related data from the database
-@app.get("/points/{point_id}", description="Get specific point associated with an id")
-async def get_specific_point(point_id: int):
-    return {"point": point_id}
+
+# GET Route to get the all the symptoms and diseases
+@app.get("/dropdown")
+async def get_dropdown():
+    try:
+        symptoms = db.getSymptomList()
+        diseases = db.getDiseaseList()
+        dropdown_data = {"symptomList": symptoms, "diseaseList": diseases}
+        
+        return dropdown_data
+    except Exception as e:
+        # Log the exception for debugging
+        print(f"Exception: {e}")
+        # Raise HTTPException with a 500 status code
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # POST Route to upload a point and their related data 
 @app.post("/points", description="Upload a point")
 async def upload_point(point: Point):
-    return point
+    try:
+        print("Received point data:")
+        for param_name, param_value in point.dict().items():
+            print(f"{param_name}: {param_value}")
+
+        # For debugging purposes, don't call db.addPoint
+        db.addPoint(
+           username="billy",
+           latitude=point.latitude,
+           longitude=point.longitude,
+           symptoms=point.symptoms,
+           diseases=point.diseases,
+           date=point.date.isoformat()
+       )
+
+        return {"message": "Point parameters printed for debugging"}
+    except Exception as e:
+        # Log the exception for debugging
+        print(f"Exception: {e}")
+        # Raise HTTPException with a 500 status code
+        raise HTTPException(status_code=500, detail="Internal Server Error")
