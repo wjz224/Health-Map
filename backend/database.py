@@ -206,8 +206,8 @@ class Database:
         result = [dict(row._mapping) for row in result]
         for row in result:
             row["DATE"] = self._stringTime(row["DATE"])
-        self._getMedInfo(result)
-        self._getCluster(result)
+        result = self._getMedInfo(result)
+        result = self._getCluster(result)
         return result
 
     def addUser(self, username: str):
