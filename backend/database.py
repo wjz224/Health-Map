@@ -172,18 +172,12 @@ class Database:
 
     def addPoint(self, username: str, latitude: float, longitude: float, symptoms: iter, diseases: iter, date: str):
         # Add a point to the database
-        self.conn.execute(text(
+        res = self.conn.execute(text(
             "INSERT INTO POINTS (LATITUDE, LONGITUDE, USERNAME, DATE) VALUES (:latitude, :longitude, :username, :date)"),
             parameters={"latitude":latitude, "longitude":longitude, "username":username, "date":date}
         )
-        result = self.conn.execute(text(
-            "SELECT ID FROM POINTS WHERE LATITUDE = :latitude AND LONGITUDE = :longitude AND USERNAME = :username"),
-            parameters={"latitude":latitude, "longitude":longitude, "username":username}
-        )
-        print("Result:", result.fetchone())
-        point_id = result.fetchone()[0]
-        self._fillSymptoms(point_id, symptoms)
-        self._fillDiseases(point_id, diseases)
+        self._fillSymptoms(res.lastrowid, symptoms)
+        self._fillDiseases(res.lastrowid, diseases)
         self.conn.commit()
 
     def _getMedInfo(self, table: list[dict]) -> list[dict]:
@@ -265,13 +259,15 @@ if __name__ == "__main__":
     db._wipePoints()
     db.addUser("bob")
     db.addUser("billy")
-    points = [(40.60401, 75.38249)]
-    for _ in range(10):
+    points = [(40.6041, 75.38249)]
+    for _ in range(5):
         temp_points = copy.deepcopy(points)
         for point in temp_points:
             points.append((point[0] + 0.0001, point[1]))
             points.append((point[0], point[1] + 0.0001))
             points.append((point[0] + 0.0001, point[1] + 0.0001))
+        points = list(set(points))
+        print(len(points))
     for i, point in enumerate(points):
         d = None
         if i % 3 == 0:
@@ -281,3 +277,5 @@ if __name__ == "__main__":
         else:
             d = ["Cold"]
         db.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now())
+
+    print(db.getAllPoints())
