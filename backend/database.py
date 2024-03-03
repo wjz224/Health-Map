@@ -205,7 +205,8 @@ class Database:
         result = [dict(row._mapping) for row in result]
         for row in result:
             row["DATE"] = self._stringTime(row["DATE"])
-        self._getMedInfo(result)
+        result = self._getMedInfo(result)
+        result = self._getCluster(result)
         return result
 
     def addUser(self, username: str):
@@ -221,8 +222,7 @@ class Database:
 
     def _wipePoints(self):
         # Wipe all points from the database
-        self.conn.execute(text("DROP TABLE POINTS"))
-        # self.conn.execute(text("DELETE FROM POINTS"))
+        self.conn.execute(text("DELETE FROM POINTS"))
         self.conn.commit()
 
     def filterPoints(self, symptoms: iter, diseases: iter) -> list[dict]:
@@ -258,6 +258,32 @@ class Database:
                 )
         self.conn.commit()
 
+    def _getCluster(self, data: list[dict]) -> list[dict]:
+        for row in data:
+            result = self.conn.execute(text(
+                "SELECT GROUP_NUM FROM POINT_GROUP WHERE POINT_ID = :point_id"),
+                parameters={"point_id":row["ID"]}
+            )
+            row["GROUP"] = result.fetchone()[0]
+        return data
+
+    def _makeDiseaseGroups(self) -> dict:
+        # make groups based on diseases
+        if len(self._getClusterData()) <= 1:
+            return {1: [self._getClusterData()[0]["ID"]]}
+        diseases = {}
+        for point in self._getClusterData():
+            s = ",".join(point['DISEASES'])
+            if s not in diseases:
+                diseases[s] = []
+            diseases[s].append(point["ID"])
+        # return diseases
+        ret = {}
+        for i, d in enumerate(diseases):
+            ret[i + 1] = diseases[d]
+        return ret
+
+
     def checkPin(self, pin: str, point_id: int) -> bool:
         # Check if a pin is correct for a given point
         result = self.conn.execute(text(
@@ -275,6 +301,7 @@ class Database:
     def makePoints(self):
         # Add some points for testing
         db._wipePoints()
+        space = 0.001
         db.makeTables()
         SPACE = 0.001
         self.addUser("bob")
@@ -304,8 +331,8 @@ class Database:
                 d = []
             else:
                 d = ["Cold"]
-            self.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now(), "80085")
-        # print(self.getAllPoints())
+            self.addPoint("bob", point[0], point[1], ["cough", "fever"], d, "80085")
+        print(self.getAllPoints())
 
 if __name__ == "__main__":
 
