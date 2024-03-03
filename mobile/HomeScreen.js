@@ -12,12 +12,6 @@ import {
   TextInput,
   Button,
 } from "react-native";
-import {
-  Menu,
-  MenuOptions,
-  MenuOption,
-  MenuTrigger,
-} from "react-native-popup-menu";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import React, { useState, useEffect } from "react";
 import MapView, { PROVIDER_GOOGLE, Callout, Marker } from "react-native-maps";
@@ -384,21 +378,6 @@ const styles = StyleSheet.create({
     height: 70,
     width: 70,
   },
-  mainScreen: {
-    top: 100,
-    right: 100,
-    backgroundColor: "white",
-  },
-  mainScreen2: {
-    top: 120,
-    right: 120,
-  },
-  menuOptions: {
-    position: "relative",
-    top: -40,
-    backgroundColor: "white",
-    width: 150,
-  },
   container2: {
     flex: 1,
     backgroundColor: "#fff",
@@ -406,18 +385,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 30,
     flexDirection: "column",
-  },
-  buttonOpen: {
-    backgroundColor: "#F194FF",
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-    marginTop: 10, // Adjust based on your layout
-  },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
   },
   centeredView: {
     flex: 1,
@@ -450,18 +417,6 @@ const styles = StyleSheet.create({
     borderColor: "black", // Adjust color as needed
     borderRadius: 5,
   },
-  buttonOpen: {
-    backgroundColor: "#F194FF",
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-    marginTop: 10,
-  },
-  textStyle: {
-    color: "black",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
   customView: {
     padding: 10,
     backgroundColor: "white",
@@ -469,12 +424,12 @@ const styles = StyleSheet.create({
     borderColor: "grey",
     borderWidth: 0.5,
   },
-  pressableStyle: {
-    marginTop: 10,
-    backgroundColor: "#ff4444",
-    padding: 10,
-    borderRadius: 5,
-  },
+  // pressableStyle: {
+  //   marginTop: 10,
+  //   backgroundColor: "#ff4444",
+  //   padding: 10,
+  //   borderRadius: 5,
+  // },
   pressableText: {
     color: "white",
     textAlign: "center",
@@ -524,84 +479,6 @@ const styles = StyleSheet.create({
     height: 70,
     width: 70,
   },
-  mainScreen: {
-    top: 100,
-    right: 100,
-    backgroundColor: "white",
-  },
-  mainScreen2: {
-    top: 120,
-    right: 120,
-  },
-  menuOptions: {
-    position: "relative",
-    top: -40,
-    backgroundColor: "white",
-    width: 150,
-  },
-  container2: {
-    flex: 1,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 30,
-    flexDirection: "column",
-  },
-  buttonOpen: {
-    backgroundColor: "#F194FF",
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-    marginTop: 10, // Adjust based on your layout
-  },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 22,
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  input: {
-    height: 40,
-    width: "100%", // Adjust if necessary
-    marginBottom: 20,
-    borderWidth: 1,
-    padding: 10,
-    color: "black",
-    borderColor: "black", // Adjust color as needed
-    borderRadius: 5,
-  },
-  buttonOpen: {
-    backgroundColor: "#F194FF",
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-    marginTop: 10,
-  },
-  textStyle: {
-    color: "black",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
   pressableStyle: {
     marginTop: 10,
     backgroundColor: "#2196F3",
@@ -609,11 +486,11 @@ const styles = StyleSheet.create({
     padding: 10,
     elevation: 2,
   },
-  pressableText: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
+  // pressableText: {
+  //   color: "white",
+  //   fontWeight: "bold",
+  //   textAlign: "center",
+  // },
   box: {
     height: 10,
   },
