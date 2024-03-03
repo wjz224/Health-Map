@@ -7,7 +7,7 @@ from random import random
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
-import cluster
+# import cluster
 
 class Database:
     def __init__(self):
@@ -133,7 +133,7 @@ class Database:
         result = self.conn.execute(text("SELECT NAME FROM DISEASES_LIST"))
         return [row[0] for row in result]
 
-    def _stringTime(self, date: datetime) -> str:
+    def stringTime(self, date: datetime) -> str:
         # Convert a datetime object to a string
         return date.strftime("%m-%d-%Y")
 
@@ -201,7 +201,7 @@ class Database:
 
     def getAllPoints(self) -> list[dict]:
         # Get all points from the database
-        result = self.conn.execute(text("SELECT * FROM POINTS"))
+        result = self.conn.execute(text("SELECT (ID, LATITUDE, LONGITUDE, USERNAME, DATE) FROM POINTS"))
         result = [dict(row._mapping) for row in result]
         for row in result:
             row["DATE"] = self._stringTime(row["DATE"])
@@ -221,14 +221,14 @@ class Database:
 
     def _wipePoints(self):
         # Wipe all points from the database
-        self.conn.execute(text("DROP TABLE POINTS"))
-        # self.conn.execute(text("DELETE FROM POINTS"))
+        # self.conn.execute(text("DROP TABLE POINTS"))
+        self.conn.execute(text("DELETE FROM POINTS"))
         self.conn.commit()
 
     def filterPoints(self, symptoms: iter, diseases: iter) -> list[dict]:
         # return a filtered list of points
         result = self.conn.execute(text(
-            """SELECT *
+            """SELECT (ID, LATITUDE, LONGITUDE, USERNAME, DATE)
                 FROM POINTS
                 WHERE ID IN (SELECT POINT_ID FROM SYMPTOMS WHERE SYMPTOM_ID IN (SELECT ID FROM SYMPTOMS_LIST WHERE NAME IN (:symptoms)))
                 OR ID IN (SELECT POINT_ID FROM DISEASES WHERE DISEASE_ID IN (SELECT ID FROM DISEASES_LIST WHERE NAME IN (:diseases)))"""),
@@ -274,24 +274,24 @@ class Database:
 
     def makePoints(self):
         # Add some points for testing
+        space = 0.001
         db._wipePoints()
         db.makeTables()
-        SPACE = 0.001
         self.addUser("bob")
         self.addUser("billy")
         points = [(40.6041, -75.38249)]
         for _ in range(3):
             temp_points = copy.deepcopy(points)
             for point in temp_points:
-                ofset = (random() * SPACE)
+                ofset = (random() * space)
                 points.append((point[0] + ofset, point[1]))
-                ofset = (random() * SPACE)
+                ofset = (random() * space)
                 points.append((point[0], point[1] + ofset))
-                ofset = (random() * SPACE)
+                ofset = (random() * space)
                 points.append((point[0] + ofset, point[1] + ofset))
-                ofset = (random() * SPACE)
+                ofset = (random() * space)
                 points.append((point[0] + ofset, point[1]))
-                ofset = (random() * SPACE)
+                ofset = (random() * space)
                 points.append((point[0], point[1] + ofset))
             points = list(set(points))
         for i, point in enumerate(points):
@@ -308,7 +308,6 @@ class Database:
         # print(self.getAllPoints())
 
 if __name__ == "__main__":
-
     db = Database()
     db._wipePoints()
     db.makeTables()
