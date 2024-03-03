@@ -229,7 +229,7 @@ class Database:
     def filterPoints(self, symptoms: iter, diseases: iter) -> list[dict]:
         # return a filtered list of points
         result = self.conn.execute(text(
-            """SELECT (ID, LATITUDE, LONGITUDE, USERNAME, DATE)
+            """SELECT ID, LATITUDE, LONGITUDE, USERNAME, DATE
                 FROM POINTS
                 WHERE ID IN (SELECT POINT_ID FROM SYMPTOMS WHERE SYMPTOM_ID IN (SELECT ID FROM SYMPTOMS_LIST WHERE NAME IN (:symptoms)))
                 OR ID IN (SELECT POINT_ID FROM DISEASES WHERE DISEASE_ID IN (SELECT ID FROM DISEASES_LIST WHERE NAME IN (:diseases)))"""),
@@ -343,4 +343,4 @@ class Database:
 
 if __name__ == "__main__":
     db = Database()
-    print(db.getAllPoints())
+    print(db.filterPoints(["cough", "fever"], ["COVID-19"]))
