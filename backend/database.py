@@ -1,6 +1,7 @@
 from google.cloud.sql.connector import Connector
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
+import copy
 from os import environ
 from datetime import datetime
 from dotenv import load_dotenv
@@ -262,17 +263,21 @@ class Database:
 if __name__ == "__main__":
     db = Database()
     db._wipePoints()
-    db.putDiseaseList(["COVID-19", "Flu", "Cold"])
-    db.putSymptomList(["Cough", "Fever", "Sore Throat"])
-    print(db.getDiseaseList())
-    print(db.getSymptomList())
     db.addUser("bob")
     db.addUser("billy")
-    db.addPoint("bob", 1.0, 1.0, ["Fever", "Sore Throat"], ["COVID-19"], "2024-03-02")
-    db.addPoint("billy", 2.0, 1.0, ["Cough"], ["Flu"], "2024-03-02")
-    print("all:")
-    print(db.getAllPoints())
-    print("filtered:")
-    print(db.filterPoints(["Fever"], []))
-    print("cluster:")
-    print(db.getClusterData())
+    points = [(40.60401, 75.38249)]
+    for _ in range(10):
+        temp_points = copy.deepcopy(points)
+        for point in temp_points:
+            points.append((point[0] + 0.0001, point[1]))
+            points.append((point[0], point[1] + 0.0001))
+            points.append((point[0] + 0.0001, point[1] + 0.0001))
+    for i, point in enumerate(points):
+        d = None
+        if i % 3 == 0:
+            d = ["COVID-19"]
+        elif i % 3 == 1:
+            d = ["Flu"]
+        else:
+            d = ["Cold"]
+        db.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now())
