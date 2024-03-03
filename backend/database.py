@@ -205,6 +205,7 @@ class Database:
         for row in result:
             row["DATE"] = self._stringTime(row["DATE"])
         self._getMedInfo(result)
+        self._getCluster(result)
         return result
 
     def addUser(self, username: str):
@@ -220,8 +221,10 @@ class Database:
 
     def _wipePoints(self):
         # Wipe all points from the database
-        # self.conn.execute(text("DROP TABLE POINTS"))
-        self.conn.execute(text("DELETE FROM POINTS"))
+        self.conn.execute(text("DROP TABLE SYMPTOMS"))
+        self.conn.execute(text("DROP TABLE DISEASES"))
+        self.conn.execute(text("DROP TABLE POINTS"))
+        # self.conn.execute(text("DELETE FROM POINTS"))
         self.conn.commit()
 
     def filterPoints(self, symptoms: iter, diseases: iter) -> list[dict]:
@@ -237,6 +240,7 @@ class Database:
         for row in result:
             row["DATE"] = self._stringTime(row["DATE"])
         self._getMedInfo(result)
+        self._getCluster(result)
         return result
 
     def getClusterData(self) -> list[dict]:
@@ -256,6 +260,15 @@ class Database:
                     parameters={"point_id":point, "group_num":group}
                 )
         self.conn.commit()
+
+    def _getCluster(self, data: list[dict]) -> list[dict]:
+        for row in data:
+            result = self.conn.execute(text(
+                "SELECT GROUP_NUM FROM POINT_GROUP WHERE POINT_ID = :point_id"),
+                parameters={"point_id":row["ID"]}
+            )
+            row["GROUP"] = result.fetchone()[0]
+        return data
 
     def checkPin(self, pin: str, point_id: int) -> bool:
         # Check if a pin is correct for a given point
@@ -278,6 +291,8 @@ class Database:
         db.makeTables()
         self.addUser("bob")
         self.addUser("billy")
+        self.putDiseaseList(["COVID-19", "Flu", "Cold"])
+        self.putSymptomList(["cough", "fever", "sore throat", "runny nose"])
         points = [(40.6041, -75.38249)]
         for _ in range(3):
             temp_points = copy.deepcopy(points)
@@ -308,3 +323,4 @@ class Database:
 
 if __name__ == "__main__":
     db = Database()
+    db.makePoints()
