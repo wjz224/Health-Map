@@ -3,9 +3,11 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 import copy
 from os import environ
+from random import random
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
+import cluster
 
 class Database:
     def __init__(self):
@@ -50,6 +52,7 @@ class Database:
                     LONGITUDE FLOAT NOT NULL,
                     USERNAME VARCHAR(255) NOT NULL,
                     DATE DATETIME NOT NULL,
+                    PIN VARCHAR(5) NOT NULL,
                     FOREIGN KEY (USERNAME) REFERENCES USERS(USERNAME))"""
         ))
         # DISEASES_LIST
@@ -243,7 +246,7 @@ class Database:
         self._getMedInfo(result)
         return result
 
-    def makeCluster(self, map: dict[int, int]):
+    def makeCluster(self, map: dict[int, list[int]]):
         # Make a cluster of points given a map
         self.conn.execute(text("DELETE FROM POINT_GROUP"))
         for group in map:
@@ -254,28 +257,60 @@ class Database:
                 )
         self.conn.commit()
 
-if __name__ == "__main__":
-    db = Database()
-    db._wipePoints()
-    db.addUser("bob")
-    db.addUser("billy")
-    points = [(40.6041, 75.38249)]
-    for _ in range(5):
-        temp_points = copy.deepcopy(points)
-        for point in temp_points:
-            points.append((point[0] + 0.0001, point[1]))
-            points.append((point[0], point[1] + 0.0001))
-            points.append((point[0] + 0.0001, point[1] + 0.0001))
-        points = list(set(points))
-        print(len(points))
-    for i, point in enumerate(points):
-        d = None
-        if i % 3 == 0:
-            d = ["COVID-19"]
-        elif i % 3 == 1:
-            d = ["Flu"]
-        else:
-            d = ["Cold"]
-        db.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now())
+    def checkPin(self, pin: str, point_id: int) -> bool:
+        # Check if a pin is correct for a given point
+        result = self.conn.execute(text(
+            "SELECT PIN FROM POINTS WHERE ID = :point_id"),
+            parameters={"point_id":point_id}
+        )
+        if result.fetchone()[0] == pin:
+            self.conn.execute(text("DELETE FROM POINTS WHERE ID = :point_id"),
+                              parameters={"point_id":point_id}
+            )
+            self.conn.commit()
+            return True
+        return False
 
-    print(db.getAllPoints())
+if __name__ == "__main__":
+    SPACE = 0.001
+    db = Database()
+    # db._wipePoints()
+    # db.addUser("bob")
+    # db.addUser("billy")
+    # points = [(40.6041, -75.38249)]
+    # for _ in range(3):
+    #     temp_points = copy.deepcopy(points)
+    #     for point in temp_points:
+    #         # make a random value between 0 and 0.002
+    #         ofset = (random() * SPACE)
+    #         points.append((point[0] + ofset, point[1]))
+    #         ofset = (random() * SPACE)
+    #         points.append((point[0], point[1] + ofset))
+    #         ofset = (random() * SPACE)
+    #         points.append((point[0] + ofset, point[1] + ofset))
+    #         ofset = (random() * SPACE)
+    #         points.append((point[0] + ofset, point[1]))
+    #         ofset = (random() * SPACE)
+    #         points.append((point[0], point[1] + ofset))
+    #     points = list(set(points))
+    #     print(len(points))
+    # for i, point in enumerate(points):
+    #     d = None
+    #     if i % 4 == 0:
+    #         d = ["COVID-19"]
+    #     elif i % 4 == 1:
+    #         d = ["Flu"]
+    #     elif i % 4 == 2:
+    #         d = []
+    #     else:
+    #         d = ["Cold"]
+    #     db.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now())
+    # print(db.getAllPoints())
+
+    c = cluster.Cluster(db=db)
+    x = c.makeDiseaseGroups()
+    count = 0
+    for i in x:
+        count += len(x[i])
+    print(count, len(db.getAllPoints()))
+    print(x)
