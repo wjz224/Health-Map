@@ -20,12 +20,10 @@ app.add_middleware(
 
 # Class to represent Point and its arguments.
 class PointPin(BaseModel):
-    pointId: int
     symptoms: Tuple[str, ...]  # Change List to Tuple
     diseases: Tuple[str, ...]  # Change List to Tuple
     longitude: float
     latitude: float
-    date: str  # This should work without any additional installations
     pin: str
     
     
@@ -101,9 +99,9 @@ async def upload_point(point: PointPin):
            longitude=point.longitude,
            symptoms=point.symptoms,
            diseases=point.diseases,
-           date=point.date,
            pin=point.pin
         )
+        
         # after adding point make the cluster
         return {"message": "Point parameters printed for debugging"}
     except Exception as e:
@@ -136,15 +134,13 @@ async def filter_points(symptoms: List[str] = Body(..., embed=True), diseases: L
         # Raise HTTPException with a 500 status code
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-# @app.get("/test")
-# async def test():
-#     try:
-#         db.makePoints()
-#         return {"Successfully ran test code"}
-#     except Exception as e:
-#         raise HTTPException(status_code = 500, detail = "Internal Server Error")
 # Delete Route that deletes based on the pin passed
-# @app.delete("/points/delete/{pointId}/{pin}")
-# async def delete_point(pin:int , pointId:int):   
-    
-#     return
+@app.delete("/points/delete/{pointId}/{pin}")
+async def delete_point(pin:str , pointId:int):
+    try:
+        if db.checkPin(pin, pointId):
+            return {"message": "Point deleted successfully"}
+        else:
+            raise HTTPException(status_code=400, detail="Invalid pin")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
