@@ -8,6 +8,9 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Modal,
+  TextInput,
+  Button,
 } from "react-native";
 import {
   Menu,
@@ -27,7 +30,10 @@ export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [points, setPoints] = useState([]);
+  const [pin, setPin] = useState('');
+  const [selectedPointIdForDeletion, setSelectedPointIdForDeletion] = useState(null);  
 
+  
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -46,11 +52,11 @@ export default function HomeScreen({ navigation }) {
     try {
       const response = await fetch('https://healthimage-ey3sdnf4ka-uk.a.run.app/points');
       const json = await response.json();
-      const pointsArray = json.points.map((point, index) => ({
+      const pointsArray = json.points.map((point) => ({
         ...point,
-        id: index, 
       }));
       setPoints(pointsArray);
+      //console.log(pointsArray);
     } catch (error) {
       console.error(error);
       setErrorMsg('Failed to fetch points data');
@@ -71,13 +77,11 @@ export default function HomeScreen({ navigation }) {
         },
         body: JSON.stringify(filterCriteria), // Convert the filter criteria into a JSON string
       });
-      console.log(JSON.stringify(filterCriteria));
+      //console.log(JSON.stringify(filterCriteria));
   
       const json = await response.json();
-      console.log(json);
-      const pointsArray = json.points.map((point, index) => ({
+      const pointsArray = json.points.map((point) => ({
         ...point,
-        id: index, // Assign an ID for key usage in Marker (if needed)
       }));
   
       setPoints(pointsArray);
@@ -85,6 +89,29 @@ export default function HomeScreen({ navigation }) {
       console.error(error);
       setErrorMsg('Failed to fetch filtered points data');
     }
+  };
+
+  const deletePoint = async (pointId, pin) => {
+    const url = `https://healthimage-ey3sdnf4ka-uk.a.run.app/points/delete/${pointId}/${pin}`;
+    // Implement your API call here using fetch or another HTTP client.
+    // For example, using fetch:
+    try {
+      const response = await fetch(url, { method: 'DELETE' });
+      console.log(response.ok)
+      console.log(response)
+      if (response.ok) {
+        fetchData();
+        Alert.alert('Point deleted successfully');
+      } else {
+        // Handle errors, e.g., incorrect pin
+        Alert.alert('Error deleting point');
+      }
+    } catch (error) {
+      console.error('Failed to delete point:', error);
+      Alert.alert('Error deleting point');
+    }
+    setPin('');
+    setSelectedPointIdForDeletion(null);
   };
   
 
@@ -103,20 +130,31 @@ export default function HomeScreen({ navigation }) {
         >
           {points.map((point) => (
             <Marker
-              key={point.id}
-              coordinate={{
-                latitude: point.latitude,
-                longitude: point.longitude,
-              }}
-            >
-              <Callout>
-                <View>
-                  <Text>Date Posted: {point.date}</Text>
-                  <Text style={styles.calloutText}>Symptoms: {point.symptoms.join(', ')}</Text>
-                  <Text style={styles.calloutText}>Diseases: {point.diseases.join(', ')}</Text>
-                </View>
-              </Callout>
-            </Marker>
+            key={point.pointId}
+            coordinate={{
+              latitude: point.latitude,
+              longitude: point.longitude,
+            }}
+          >
+            <Callout tooltip={true} onPress={() => { 
+              setSelectedPointIdForDeletion(point.pointId);
+              }}>
+              <View style={styles.customView}>
+                <Text>Date Posted: {point.date}</Text>
+                <Text style={styles.calloutText}>Symptoms: {point.symptoms.join(', ')}</Text>
+                <Text style={styles.calloutText}>Diseases: {point.diseases.join(', ')}</Text>
+                <Pressable 
+                  onPress={() => {
+                    setSelectedPointId(point.id);
+                    toggleDeleteModal();
+                  }}
+                  style={styles.pressableStyle}
+                >
+                  <Text style={styles.pressableText}>Delete</Text>
+                </Pressable>
+              </View>
+            </Callout>
+          </Marker>
           ))}
 
 
@@ -185,11 +223,54 @@ export default function HomeScreen({ navigation }) {
           </ScrollView>
         </MenuOptions>
       </Menu>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={selectedPointIdForDeletion !== null}
+        onRequestClose={() => setSelectedPointIdForDeletion(null)}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text>pin</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setPin}
+              value={pin}
+              placeholder="Enter Pin"
+              keyboardType="default"
+            />
+            <Button
+              title="Delete"
+              onPress={() => {
+                console.log(selectedPointIdForDeletion);
+                deletePoint(selectedPointIdForDeletion, pin);
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  customView: {
+    padding: 10,
+    backgroundColor: 'white',
+    borderRadius: 6,
+    borderColor: 'grey',
+    borderWidth: 0.5,
+  },
+  pressableStyle: {
+    marginTop: 10,
+    backgroundColor: '#ff4444',
+    padding: 10,
+    borderRadius: 5,
+  },
+  pressableText: {
+    color: 'white',
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: "black",
@@ -246,5 +327,72 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 30,
     flexDirection: "column",
+  },
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    marginTop: 10, // Adjust based on your layout
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  input: {
+    height: 40,
+    width: "100%", // Adjust if necessary
+    marginBottom: 20,
+    borderWidth: 1,
+    padding: 10,
+    color: "black",
+    borderColor: 'black', // Adjust color as needed
+    borderRadius: 5,
+  },
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    marginTop: 10,
+  },
+  textStyle: {
+    color: "black",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  pressableStyle: {
+    marginTop: 10,
+    backgroundColor: '#2196F3',
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  pressableText: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
