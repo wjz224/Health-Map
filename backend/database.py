@@ -309,44 +309,4 @@ class Database:
 
 if __name__ == "__main__":
     db = Database()
-    db._wipePoints()
-    db.makeTables()
-    db.addUser("bob")
-    db.addUser("billy")
-    points = [(40.6041, -75.38249)]
-    for _ in range(3):
-        temp_points = copy.deepcopy(points)
-        for point in temp_points:
-            # make a random value between 0 and 0.002
-            ofset = (random() * SPACE)
-            points.append((point[0] + ofset, point[1]))
-            ofset = (random() * SPACE)
-            points.append((point[0], point[1] + ofset))
-            ofset = (random() * SPACE)
-            points.append((point[0] + ofset, point[1] + ofset))
-            ofset = (random() * SPACE)
-            points.append((point[0] + ofset, point[1]))
-            ofset = (random() * SPACE)
-            points.append((point[0], point[1] + ofset))
-        points = list(set(points))
-        print(len(points))
-    for i, point in enumerate(points):
-        d = None
-        if i % 4 == 0:
-            d = ["COVID-19"]
-        elif i % 4 == 1:
-            d = ["Flu"]
-        elif i % 4 == 2:
-            d = []
-        else:
-            d = ["Cold"]
-        db.addPoint("bob", point[0], point[1], ["cough", "fever"], d, datetime.now(), "80085")
-    print(db.getAllPoints())
-
-    c = cluster.Cluster(db=db)
-    x = c.makeDiseaseGroups()
-    count = 0
-    for i in x:
-        count += len(x[i])
-    print(count, len(db.getAllPoints()))
-    print(x)
+    
