@@ -236,6 +236,8 @@ class Database:
             parameters={"symptoms": ",".join(symptoms), "diseases": ",".join(diseases)}
         )
         result = [dict(row._mapping) for row in result]
+        for row in result:
+            row["DATE"] = self._stringTime(row["DATE"])
         self._getMedInfo(result)
         return result
 
