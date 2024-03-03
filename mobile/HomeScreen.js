@@ -163,6 +163,8 @@ export default function HomeScreen(props) {
         ...point,
       }));
       setPoints(pointsArray);
+      console.log("Points shown here");
+      console.log(points);
       //console.log(pointsArray);
     } catch (error) {
       console.error(error);
