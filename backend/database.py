@@ -2,6 +2,7 @@ from google.cloud.sql.connector import Connector
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from os import environ
+from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -107,6 +108,7 @@ class Database:
             )
         self.conn.commit()
 
+
     def putDiseaseList(self, diseases: iter):
         # Insert the list of diseases into the database
         self.conn.execute(text("DELETE FROM DISEASES_LIST"))
@@ -126,6 +128,10 @@ class Database:
         # Get the list of diseases from the database
         result = self.conn.execute(text("SELECT NAME FROM DISEASES_LIST"))
         return [row[0] for row in result]
+
+    def _stringTime(self, date: datetime) -> str:
+        # Convert a datetime object to a string
+        return date.strftime("%m-%d-%Y")
 
     def _fillSymptoms(self, point_id: int, symptoms: iter):
         # Fill the symptoms for a given point
@@ -198,6 +204,8 @@ class Database:
         # Get all points from the database
         result = self.conn.execute(text("SELECT * FROM POINTS"))
         result = [dict(row._mapping) for row in result]
+        for row in result:
+            row["DATE"] = self._stringTime(row["DATE"])
         self._getMedInfo(result)
         return result
 

@@ -47,7 +47,7 @@ async def get_all_points():
             )
             for point in all_points
         ]
-            
+
         return {"points": formatted_points}
     except Exception as e:
         # Log the exception for debugging
@@ -63,7 +63,7 @@ async def get_dropdown():
         symptoms = db.getSymptomList()
         diseases = db.getDiseaseList()
         dropdown_data = {"symptomList": symptoms, "diseaseList": diseases}
-        
+
         return dropdown_data
     except Exception as e:
         # Log the exception for debugging
@@ -99,16 +99,22 @@ async def upload_point(point: Point):
 
 @app.get("/points/filter", description="Filter points based on symptoms and diseases")
 async def filter_points(symptoms: List[str] = Body(..., embed=True), diseases: List[str] = Body(..., embed=True)):
-    points = db.filterPoints(symptoms, diseases)
-    formatted_points = [
-        Point(
-            pointId = point["ID"],
-            symptoms=tuple(point["SYMPTOMS"]),
-            diseases=tuple(point["DISEASES"]),
-            longitude=point["LONGITUDE"],
-            latitude=point["LATITUDE"],
-            date=datetime(2022, 1, 1)
-        )
-        for point in points
-    ]
-    return {"points": formatted_points}
+    try:
+        points = db.filterPoints(symptoms, diseases)
+        formatted_points = [
+            Point(
+                pointId = point["ID"],
+                symptoms=tuple(point["SYMPTOMS"]),
+                diseases=tuple(point["DISEASES"]),
+                longitude=point["LONGITUDE"],
+                latitude=point["LATITUDE"],
+                date=datetime(2022, 1, 1)
+            )
+            for point in points
+        ]
+        return {"points": formatted_points}
+    except Exception as e:
+        # Log the exception for debugging
+        print(f"Exception: {e}")
+        # Raise HTTPException with a 500 status code
+        raise HTTPException(status_code=500, detail="Internal Server Error")
