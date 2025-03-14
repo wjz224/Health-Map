@@ -4,6 +4,9 @@
 
 </p>
 
+## Demo UI:
+![Health Map Demo](https://raw.githubusercontent.com/wjz224/Health-Map/main/Demo.png)
+
 ## Project Description
 
 Health-Map is a project designed to facilitate the collection and visualization of health-related data on a map. It consists of a backend built with Python (FastAPI) and a mobile frontend developed with React Native. Users can submit data points representing health information, including symptoms and diseases, at specific locations. The application allows users to filter and display this information on a map, providing insights into health trends and potential outbreaks.
